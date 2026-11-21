@@ -1,17 +1,19 @@
 # AquaSentinel — 48h Hackathon Build Plan
 
 **Goal:** one field, end-to-end, judge-ready.  
-Site → imagery → NDVI → stats → before/after → short explanation.
+Site → imagery → NDVI → weather → crop profile → irrigation plan (estimate + schedule).
+
+**App shell now:** sidebar Home / Dashboard / Sites / Analysis (collapsible + logo icon).
 
 ------------------------------------------------------------------------
 
-## Day 0 (before start) — 1–2h
+## Day 0 (before start) — 1–2h ✅
 
 - Pick **one real field** (GeoJSON ready) and **2–3 clear dates** (low cloud).
 - Confirm GEE access + Sentinel-2 NDVI pipeline that already worked.
-- Freeze stack: **web map UI + Nest/FastAPI + Python/GEE jobs** (skip Flutter unless someone is already fluent).
+- Freeze stack: **web map UI + Nest + Python/PC jobs** (skip Flutter).
 - Decide roles:
-  - **A** — data / GEE
+  - **A** — data / imagery
   - **B** — API / jobs
   - **C** — frontend / map
   - **D** — pitch / demo data
@@ -57,51 +59,101 @@ No AI, no Pi, no enhancement.
 
 **Exit criteria:** flag + evidence + plain-language blurb; demo survives offline-ish. ✅
 
-**Demo (cached):** Dashboard → **Open Kizuna demo** → Analysis → Compare / Report. Re-seed: `python scripts/precache_demo.py`
-
-**App flow:** Dashboard (sites CRUD + polygon edit) → Analysis (scan latest / older / compare / report).
+**Demo (cached):** Dashboard → **Load demo** → Analysis → Compare / Report. Re-seed: `python scripts/precache_demo.py`
 
 ------------------------------------------------------------------------
 
-## Hours 24–32 — Stretch only if core is solid ✅ DONE
-
-Priority order:
+## Hours 24–32 — Stretch + weather foundation ✅ DONE
 
 1. [x] Original vs **enhanced** image toggle (clear **DERIVED VISUAL** badge; sharpening only, same S2 pixels).
-2. [x] Multi-site list (Recent sites — still 1–2 sites max in demo).
-3. [x] Optional weather row (Open-Meteo daily rainfall next to NDVI — no drought claims).
-4. [x] Pi: **skipped** for pitch (not needed).
+2. [x] Multi-site list + Sites / Dashboard / Analysis split + landing.
+3. [x] **Weather fetch + cache** (Open-Meteo archive/forecast → Mongo `WeatherCache`; rain / temp / ET₀).
+4. [x] Weather on Analysis panel + Dashboard cards.
+5. [x] Pi: **skipped** for pitch (not needed).
 
-**Stop** if any of these threaten the live demo.
+**API:** `GET /sites/:id/weather?around=YYYY-MM-DD`, `POST /sites/:id/weather/refresh`  
+**Source:** [Open-Meteo](https://open-meteo.com/) at site centroid — context only, not a drought claim.
 
 ------------------------------------------------------------------------
 
-## Hours 32–40 — Demo hardening
+## Hours 32–40 — Main module: irrigation plan 🔄 NOW
 
-- Fixed demo path: Site X → Oct date → Nov date → flag → report download.
+**Module name:** Irrigation Advisor (decision support, not a pump controller).
+
+### Inputs
+
+| Input | Source | Owner |
+| ----- | ------ | ----- |
+| Satellite / NDVI analysis | Latest (or compared) observation: mean/min/max, Δ, coverage, inspect flag | System |
+| Weather | Cached Open-Meteo window (precip, temp, ET₀) around scene date | System |
+| Type plante | Farmer entry on site (e.g. olivier, blé, tomate) | Farmer |
+| Âge plante | Farmer entry (days / stage: jeune / végétatif / mature) | Farmer |
+| Type terre | Farmer entry (sableux / limoneux / argileux) | Farmer |
+
+### Pipeline (hybrid — rules first, LLM second)
+
+```text
+Crop profile + NDVI stats + weather days
+        ↓
+Rule engine (FAO-style sketch)
+  Kc from plant type + age stage
+  ETc ≈ ET₀ × Kc
+  Soil store / interval from type terre
+  Stress hint from NDVI mean / Δ / inspect flag
+        ↓
+Structured facts JSON (numbers + assumptions)
+        ↓
+LLM narrates only from those facts
+        ↓
+UI: estimated consumption + irrigation planification
+```
+
+### Outputs
+
+1. **Estimated consumption** — mm/day and m³ for the field over ~7 days, with assumptions listed.
+2. **Irrigation planification** — suggested days / volumes; reduce/skip if rain covers need; “inspect first” if NDVI flag is on.
+3. **Honesty banner** — “Generated from structured stats — not a diagnosis / not an automatic command.”
+
+### Build checklist
+
+- [ ] Extend Site model + Sites form: `plantType`, `plantAge`, `soilType` (+ optional area already known)
+- [ ] `POST /sites/:id/irrigation-plan` (body: optional `observationId`)
+- [ ] Rule service: Kc table + ETc + soil interval + NDVI stress adjustment
+- [ ] LLM service: prompt locked to facts JSON; return plan text + schedule bullets
+- [ ] Analysis UI: crop summary + **Plan irrigation** button → estimate + schedule panel
+- [ ] Dashboard/Sites: show crop profile completeness
+- [ ] Demo seed: one site with olive/wheat profile + plan that works offline-ish (cached facts)
+
+### Exit criteria
+
+Farmer fills crop fields → open Analysis → Plan irrigation → see **consumption estimate + 7-day plan** grounded in NDVI + weather + profile.  
+Judges can ask “where did the number come from?” → show facts JSON / assumptions.
+
+**Stop** if this threatens the live NDVI compare demo — fall back to rules-only text without LLM.
+
+------------------------------------------------------------------------
+
+## Hours 40–48 — Demo hardening + pitch
+
+- Fixed demo path: Site (crop profile) → Scan / Load demo → Weather → **Plan irrigation** → Compare → Report.
 - Backup: screenshots/video of the same flow.
 - Kill features that aren’t on the happy path.
 - One slide: problem → workflow → live → honesty (science vs AI).
-
-------------------------------------------------------------------------
-
-## Hours 40–48 — Pitch lock
-
 - 3-minute script; each person has one beat.
-- Success checklist (from product spec §15): site, imagery, provenance, NDVI reproducible, dates visible, report.
-- Q&A prep: resolution limits, clouds, no ground truth yet, enhancement ≠ measurement.
+- Q&A prep: NDVI ≠ soil moisture; Open-Meteo ≠ rain gauge; enhancement ≠ measurement; plan is indicative.
 
 ------------------------------------------------------------------------
 
 ## Must / Should / Won’t (hackathon)
 
-| Must                         | Should                        | Won’t (this weekend)              |
-| ---------------------------- | ----------------------------- | --------------------------------- |
-| Site + boundary              | Temporal compare              | Full auth / multi-tenant          |
-| Sentinel-2 + cloud filter    | Basic report                  | Drought diagnosis                 |
-| NDVI + field stats           | Rule-based “inspect” flag     | IoT sensors / solar power         |
-| Map + provenance             | LLM explanation from facts    | Production PostGIS perfection     |
-| Async job that finishes      | Enhancement toggle            | Broad land-degradation claims     |
+| Must                         | Should                              | Won’t (this weekend)              |
+| ---------------------------- | ----------------------------------- | --------------------------------- |
+| Site + boundary              | Temporal compare                    | Full auth / multi-tenant          |
+| Sentinel-2 + cloud filter    | Basic report                        | Drought diagnosis                 |
+| NDVI + field stats           | Rule-based “inspect” flag           | IoT sensors / solar power         |
+| Map + provenance             | Weather cache (Open-Meteo)          | Production PostGIS perfection     |
+| Crop profile (type/âge/terre)| Hybrid irrigation estimate + plan   | Autonomous irrigation controller  |
+| Async job that finishes      | LLM narration from facts only       | Broad land-degradation claims     |
 
 ------------------------------------------------------------------------
 
@@ -111,13 +163,14 @@ Priority order:
 T+8h   Live: site → NDVI on map
 T+16h  Live: two-date compare + ΔNDVI
 T+24h  Live: flag + evidence + report
-T+32h  Optional wow (enhance / Pi worker)
-T+40h  Demo frozen
-T+48h  Pitch
+T+32h  Weather cached + UI
+T+40h  Irrigation Advisor (rules + optional LLM)
+T+48h  Demo frozen + pitch
 ```
 
 ------------------------------------------------------------------------
 
 ## Strategy
 
-Ship a **trustworthy field monitoring loop**; use AI and enhancement as garnish, not the meal.
+Ship a **trustworthy field monitoring → water advice loop**.  
+NDVI and weather are evidence; crop fields are farmer truth; rules own the numbers; LLM only explains the plan.
