@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { HealthController } from './health.controller';
 import { ScanModule } from './scan/scan.module';
 import { SitesModule } from './sites/sites.module';
+import { WeatherModule } from './weather/weather.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SitesModule } from './sites/sites.module';
     }),
     ScanModule,
     SitesModule,
+    WeatherModule,
   ],
   controllers: [HealthController],
 })

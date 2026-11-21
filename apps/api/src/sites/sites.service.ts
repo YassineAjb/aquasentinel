@@ -6,6 +6,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ScanService } from '../scan/scan.service';
+import { WeatherService } from '../weather/weather.service';
 import { CompareDto } from './dto/compare.dto';
 import { CreateSiteDto } from './dto/create-site.dto';
 import { ScanDto } from './dto/scan.dto';
@@ -23,6 +24,7 @@ export class SitesService {
     @InjectModel(Observation.name)
     private readonly observationModel: Model<ObservationDocument>,
     private readonly scanService: ScanService,
+    private readonly weatherService: WeatherService,
   ) {}
 
   private oid(id: string, label = 'id') {
@@ -136,7 +138,30 @@ export class SitesService {
     const site = await this.siteModel.findByIdAndDelete(siteOid).lean();
     if (!site) throw new NotFoundException('Site not found');
     await this.observationModel.deleteMany({ siteId: siteOid });
+    await this.weatherService.deleteForSite(id).catch(() => undefined);
     return { ok: true, deletedId: id };
+  }
+
+  getWeather(
+    siteId: string,
+    query: { from?: string; to?: string; around?: string; refresh?: string },
+  ) {
+    return this.weatherService.getForSite(siteId, {
+      from: query.from,
+      to: query.to,
+      around: query.around,
+      refresh: query.refresh === '1' || query.refresh === 'true',
+    });
+  }
+
+  refreshWeather(
+    siteId: string,
+    body: { from?: string; to?: string; around?: string } = {},
+  ) {
+    return this.weatherService.getForSite(siteId, {
+      ...body,
+      refresh: true,
+    });
   }
 
   async scan(siteId: string, dto: ScanDto = {}) {
@@ -217,6 +242,12 @@ export class SitesService {
     });
 
     // Return scan payload with NDVI base64 (v0 map path) + bounds
+    // Prefetch weather around the scene date for later analysis UI
+    void this.weatherService.ensureAroundScene(
+      siteId,
+      String(scene.date || ''),
+    );
+
     const plain =
       typeof (observation as { toObject?: () => unknown }).toObject === 'function'
         ? (observation as { toObject: () => typeof observation }).toObject()

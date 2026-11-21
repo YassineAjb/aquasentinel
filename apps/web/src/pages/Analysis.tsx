@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   api,
-  fetchDailyRainfall,
   observationImageUrl,
-  siteCentroid,
   type CompareResult,
   type Observation,
   type Site,
+  type WeatherSeries,
 } from '../api';
 import FieldMap from '../components/FieldMap';
 
@@ -16,6 +15,14 @@ type SceneVisual = 'original' | 'enhanced';
 
 function fmtNdvi(v?: number | null) {
   return v == null ? '—' : v.toFixed(4);
+}
+
+function fmtMm(v?: number | null) {
+  return v == null ? '—' : `${v.toFixed(1)} mm`;
+}
+
+function fmtC(v?: number | null) {
+  return v == null ? '—' : `${v.toFixed(1)}°C`;
 }
 
 function coverageWarn(obs: Observation) {
@@ -40,12 +47,9 @@ export default function Analysis() {
   const [statusKind, setStatusKind] = useState<'ok' | 'busy' | 'error' | ''>(
     'busy',
   );
-  const [rainfall, setRainfall] = useState<{
-    date: string;
-    rainMm: number | null;
-    source: string;
-  } | null>(null);
-  const [rainError, setRainError] = useState('');
+  const [weather, setWeather] = useState<WeatherSeries | null>(null);
+  const [weatherError, setWeatherError] = useState('');
+  const [weatherBusy, setWeatherBusy] = useState(false);
   const [ndvi, setNdvi] = useState<{
     url: string;
     bounds: [[number, number], [number, number]];
@@ -96,28 +100,36 @@ export default function Analysis() {
   }, [siteId]);
 
   useEffect(() => {
-    if (!site || !observation?.acquiredAt) {
-      setRainfall(null);
-      setRainError('');
+    if (!siteId || !observation?.acquiredAt) {
+      setWeather(null);
+      setWeatherError('');
       return;
     }
-    const c = siteCentroid(site);
-    if (!c) return;
     let cancelled = false;
-    fetchDailyRainfall(c.lat, c.lon, observation.acquiredAt)
-      .then((row) => {
-        if (!cancelled) setRainfall(row);
-      })
-      .catch(() => {
+    setWeatherBusy(true);
+    api
+      .getWeather(siteId, { around: observation.acquiredAt })
+      .then((series) => {
         if (!cancelled) {
-          setRainfall(null);
-          setRainError('Rainfall unavailable for this date');
+          setWeather(series);
+          setWeatherError('');
         }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setWeather(null);
+          setWeatherError(
+            err instanceof Error ? err.message : 'Weather unavailable',
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setWeatherBusy(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [site, observation?.acquiredAt]);
+  }, [siteId, observation?.acquiredAt]);
 
   function applyNdvi(obs: Observation, sid: string) {
     const bounds = obs.overlay?.bounds;
@@ -296,21 +308,6 @@ export default function Analysis() {
                 <span>dense</span>
               </div>
             </div>
-            {(rainfall || rainError) && (
-              <div className="stat">
-                <span>Rainfall (scene day)</span>
-                <span>
-                  {rainfall?.rainMm != null
-                    ? `${rainfall.rainMm.toFixed(1)} mm`
-                    : rainError || '—'}
-                </span>
-              </div>
-            )}
-            {rainfall && (
-              <p className="hint">
-                {rainfall.source} · context only — not a drought diagnosis
-              </p>
-            )}
             {coverageWarn(observation) && (
               <p className="status error">{coverageWarn(observation)}</p>
             )}
@@ -355,6 +352,88 @@ export default function Analysis() {
                 </p>
               </div>
             )}
+          </section>
+        )}
+
+        {observation?.acquiredAt && (
+          <section className="panel">
+            <div className="panel-head">
+              <h2>Weather</h2>
+              <button
+                className="text-btn"
+                type="button"
+                disabled={!siteId || weatherBusy}
+                onClick={async () => {
+                  if (!siteId || !observation.acquiredAt) return;
+                  try {
+                    setWeatherBusy(true);
+                    const series = await api.refreshWeather(siteId, {
+                      around: observation.acquiredAt,
+                    });
+                    setWeather(series);
+                    setWeatherError('');
+                  } catch (err) {
+                    setWeatherError(
+                      err instanceof Error ? err.message : 'Refresh failed',
+                    );
+                  } finally {
+                    setWeatherBusy(false);
+                  }
+                }}
+              >
+                {weatherBusy ? 'Fetching…' : 'Refresh'}
+              </button>
+            </div>
+            {weatherError && <p className="status error">{weatherError}</p>}
+            {weather?.sceneDay && (
+              <>
+                <div className="stat">
+                  <span>Rain (scene day)</span>
+                  <span>{fmtMm(weather.sceneDay.precipMm)}</span>
+                </div>
+                <div className="stat">
+                  <span>Temp mean / max</span>
+                  <span>
+                    {fmtC(weather.sceneDay.tempMeanC)} /{' '}
+                    {fmtC(weather.sceneDay.tempMaxC)}
+                  </span>
+                </div>
+                <div className="stat">
+                  <span>ET₀ (FAO)</span>
+                  <span>{fmtMm(weather.sceneDay.et0Mm)}</span>
+                </div>
+              </>
+            )}
+            {weather && weather.days.length > 0 && (
+              <div className="weather-strip" aria-label="7-day weather context">
+                {weather.days.map((d) => {
+                  const active = d.date === weather.sceneDay?.date;
+                  const rain = d.precipMm ?? 0;
+                  const height = Math.min(100, Math.round((rain / 12) * 100));
+                  return (
+                    <div
+                      key={d.date}
+                      className={`weather-day${active ? ' active' : ''}`}
+                      title={`${d.date}: ${fmtMm(d.precipMm)}, ${fmtC(d.tempMeanC)}`}
+                    >
+                      <div className="weather-bar-wrap">
+                        <div
+                          className="weather-bar"
+                          style={{ height: `${Math.max(height, rain > 0 ? 8 : 2)}%` }}
+                        />
+                      </div>
+                      <span className="weather-day-label">
+                        {d.date.slice(5)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <p className="hint">
+              {weather?.source || 'Open-Meteo'} · cached for later · context
+              only — not a drought diagnosis
+            </p>
           </section>
         )}
 

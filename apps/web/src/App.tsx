@@ -64,7 +64,7 @@ export default function App() {
             {collapsed ? (
               <img
                 className="brand-logo"
-                src="/logo.png"
+                src="/logo/logo1.png"
                 alt=""
                 width={40}
                 height={40}

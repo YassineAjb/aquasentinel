@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScanModule } from '../scan/scan.module';
+import { WeatherModule } from '../weather/weather.module';
 import { Observation, ObservationSchema } from './schemas/observation.schema';
 import { Site, SiteSchema } from './schemas/site.schema';
 import { SitesController } from './sites.controller';
@@ -13,6 +14,7 @@ import { SitesService } from './sites.service';
       { name: Observation.name, schema: ObservationSchema },
     ]),
     ScanModule,
+    WeatherModule,
   ],
   controllers: [SitesController],
   providers: [SitesService],

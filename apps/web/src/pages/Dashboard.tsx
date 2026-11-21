@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api, type Site } from '../api';
+import { api, type Site, type WeatherDay } from '../api';
 import SiteMiniMap from '../components/SiteMiniMap';
 
 type SiteCard = Site & {
   scanCount?: number;
   latestDate?: string;
   latestNdvi?: number | null;
+  weatherDay?: WeatherDay | null;
 };
 
 export default function Dashboard() {
@@ -26,11 +27,23 @@ export default function Dashboard() {
             try {
               const obs = await api.listObservations(s._id);
               const latest = obs[0];
+              let weatherDay: WeatherDay | null = null;
+              if (latest?.acquiredAt) {
+                try {
+                  const wx = await api.getWeather(s._id, {
+                    around: latest.acquiredAt,
+                  });
+                  weatherDay = wx.sceneDay;
+                } catch {
+                  weatherDay = null;
+                }
+              }
               return {
                 ...s,
                 scanCount: obs.length,
                 latestDate: latest?.acquiredAt,
                 latestNdvi: latest?.stats?.mean ?? null,
+                weatherDay,
               } satisfies SiteCard;
             } catch {
               return { ...s, scanCount: 0 } satisfies SiteCard;
@@ -139,6 +152,17 @@ export default function Dashboard() {
                       Latest {s.latestDate}
                       {s.latestNdvi != null
                         ? ` · NDVI ${s.latestNdvi.toFixed(3)}`
+                        : ''}
+                    </span>
+                  )}
+                  {s.weatherDay && (
+                    <span>
+                      Rain{' '}
+                      {s.weatherDay.precipMm != null
+                        ? `${s.weatherDay.precipMm.toFixed(1)} mm`
+                        : '—'}
+                      {s.weatherDay.tempMeanC != null
+                        ? ` · ${s.weatherDay.tempMeanC.toFixed(1)}°C`
                         : ''}
                     </span>
                   )}

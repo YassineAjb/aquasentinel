@@ -116,31 +116,27 @@ export function observationImageUrl(
   return base;
 }
 
-/** Open-Meteo daily rainfall for the field centroid (context only — not a drought claim). */
-export async function fetchDailyRainfall(
-  lat: number,
-  lon: number,
-  date: string,
-): Promise<{ date: string; rainMm: number | null; source: string }> {
-  const url = new URL('https://archive-api.open-meteo.com/v1/archive');
-  url.searchParams.set('latitude', String(lat));
-  url.searchParams.set('longitude', String(lon));
-  url.searchParams.set('start_date', date);
-  url.searchParams.set('end_date', date);
-  url.searchParams.set('daily', 'precipitation_sum');
-  url.searchParams.set('timezone', 'auto');
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error('Weather lookup failed');
-  const data = (await res.json()) as {
-    daily?: { time?: string[]; precipitation_sum?: (number | null)[] };
-  };
-  const rain = data.daily?.precipitation_sum?.[0];
-  return {
-    date,
-    rainMm: rain == null || Number.isNaN(Number(rain)) ? null : Number(rain),
-    source: 'Open-Meteo archive',
-  };
-}
+export type WeatherDay = {
+  date: string;
+  precipMm: number | null;
+  tempMeanC: number | null;
+  tempMaxC: number | null;
+  tempMinC: number | null;
+  et0Mm: number | null;
+};
+
+export type WeatherSeries = {
+  siteId: string;
+  lat: number;
+  lon: number;
+  from: string;
+  to: string;
+  source: string;
+  fetchedAt: string | null;
+  days: WeatherDay[];
+  sceneDay: WeatherDay | null;
+  note: string;
+};
 
 export function siteCentroid(site: Site): { lat: number; lon: number } | null {
   const ring = site.boundary?.coordinates?.[0];
@@ -192,4 +188,26 @@ export const api = {
     }),
   reportUrl: (siteId: string, aId: string, bId: string) =>
     `${API_URL}/sites/${siteId}/report?a=${encodeURIComponent(aId)}&b=${encodeURIComponent(bId)}`,
+  getWeather: (
+    siteId: string,
+    opts: { from?: string; to?: string; around?: string; refresh?: boolean } = {},
+  ) => {
+    const q = new URLSearchParams();
+    if (opts.from) q.set('from', opts.from);
+    if (opts.to) q.set('to', opts.to);
+    if (opts.around) q.set('around', opts.around);
+    if (opts.refresh) q.set('refresh', '1');
+    const qs = q.toString();
+    return request<WeatherSeries>(
+      `/sites/${siteId}/weather${qs ? `?${qs}` : ''}`,
+    );
+  },
+  refreshWeather: (
+    siteId: string,
+    body: { from?: string; to?: string; around?: string } = {},
+  ) =>
+    request<WeatherSeries>(`/sites/${siteId}/weather/refresh`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
 };

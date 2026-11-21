@@ -782,6 +782,59 @@ h2 {
   text-align: right;
 }
 
+.weather-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0.85rem 0 0.35rem;
+  align-items: end;
+}
+
+.weather-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.weather-bar-wrap {
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.weather-bar {
+  width: 55%;
+  min-height: 2px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #6ec8ff, #2f7f9e);
+}
+
+.weather-day.active .weather-bar {
+  background: linear-gradient(180deg, #9be07a, #2f9e44);
+}
+
+.weather-day.active .weather-bar-wrap {
+  outline: 1px solid rgba(47, 158, 68, 0.45);
+}
+
+.weather-day-label {
+  font-size: 0.62rem;
+  color: var(--faint);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.weather-day.active .weather-day-label {
+  color: #b8e0bc;
+}
+
 .mono {
   font-size: 0.7rem;
   max-width: 160px;

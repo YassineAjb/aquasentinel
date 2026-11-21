@@ -51,6 +51,25 @@ export class SitesController {
     return this.sitesService.scan(id, dto || {});
   }
 
+  @Get(':id/weather')
+  weather(
+    @Param('id') id: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('around') around?: string,
+    @Query('refresh') refresh?: string,
+  ) {
+    return this.sitesService.getWeather(id, { from, to, around, refresh });
+  }
+
+  @Post(':id/weather/refresh')
+  refreshWeather(
+    @Param('id') id: string,
+    @Body() body: { from?: string; to?: string; around?: string },
+  ) {
+    return this.sitesService.refreshWeather(id, body || {});
+  }
+
   @Get(':id/observations')
   listObservations(@Param('id') id: string) {
     return this.sitesService.listObservations(id);
