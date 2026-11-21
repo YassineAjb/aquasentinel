@@ -70,15 +70,14 @@ export default function App() {
             aria-label={collapsed ? t('nav.expand') : 'AquaSentinel'}
             title={collapsed ? t('nav.expand') : undefined}
           >
-            {collapsed ? (
-              <img
-                className="brand-logo"
-                src="/logo/logo1.png"
-                alt=""
-                width={40}
-                height={40}
-              />
-            ) : (
+            <img
+              className="brand-logo"
+              src="/logo/logo.png"
+              alt=""
+              width={40}
+              height={40}
+            />
+            {!collapsed && (
               <span className="brand-copy">
                 <span className="brand-mark">AquaSentinel</span>
                 <span className="brand-tag">{t('brand.tag')}</span>

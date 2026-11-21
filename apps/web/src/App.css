@@ -1403,7 +1403,7 @@ h2 {
 
 }
 
-/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ RainCatch (map-first) ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */
+/* ÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâ RainCatch (map-first) ÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâ */
 .rc-stage {
   position: relative;
   flex: 1;
@@ -1942,7 +1942,7 @@ h2 {
   }
 }
 
-/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ CutSheetRX webview ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */
+/* ÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâ CutSheetRX webview ÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâ */
 .csrx-stage {
   flex: 1;
   min-height: 0;
@@ -1967,21 +1967,21 @@ h2 {
   background: #111;
 }
 
-/* Host logo/title cover Ã¢ÂÂ flush with their left drawer */
+/* Cover host title only — aligned to their drawer (top/left 12px, width 310px) */
 .csrx-brand-cover {
   position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 4;
-  width: 292px;
-  height: 52px;
-  padding: 0 14px 0 16px;
+  top: 13px;
+  left: 13px;
+  z-index: 6;
+  width: 258px;
+  height: 48px;
+  padding: 0 12px 0 14px;
   display: flex;
   align-items: center;
-  background: #1c1c1c;
+  background: #1a1e1b;
   pointer-events: none;
   box-sizing: border-box;
-  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 7px 0 0 0;
 }
 
 .csrx-brand-cover-inner {
@@ -2079,7 +2079,9 @@ h2 {
 
 @media (max-width: 900px) {
   .csrx-brand-cover {
-    width: min(260px, 72vw);
+    top: 13px;
+    left: 13px;
+    width: min(240px, calc(100vw - 5.5rem));
     height: 48px;
   }
 
@@ -2097,7 +2099,7 @@ h2 {
   }
 }
 
-/* Ã¢ÂÂÃ¢ÂÂ Field assistant (centered liquid glass) Ã¢ÂÂÃ¢ÂÂ */
+/* ÃÆÃÂ¢ÃâÃâ¬ÃâÃâÃÆÃÂ¢ÃâÃâ¬ÃâÃâ Field assistant (centered liquid glass) ÃÆÃÂ¢ÃâÃâ¬ÃâÃâÃÆÃÂ¢ÃâÃâ¬ÃâÃâ */
 .assistant-fab {
   position: fixed;
   right: 1.15rem;
