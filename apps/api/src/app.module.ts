@@ -6,6 +6,7 @@ import { IrrigationModule } from './irrigation/irrigation.module';
 import { ScanModule } from './scan/scan.module';
 import { SitesModule } from './sites/sites.module';
 import { WeatherModule } from './weather/weather.module';
+import { AssistantModule } from './assistant/assistant.module';
 
 @Module({
   imports: [
