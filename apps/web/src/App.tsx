@@ -10,6 +10,7 @@ import {
   type LucideProps,
 } from 'lucide-react';
 import { NavLink, Route, Routes } from 'react-router-dom';
+import AssistantFloat from './components/AssistantFloat';
 import Analysis from './pages/Analysis';
 import AnalysisPicker from './pages/AnalysisPicker';
 import CutSheetRX from './pages/CutSheetRX';
@@ -120,6 +121,7 @@ export default function App() {
           <Route path="/raincatch" element={<RainCatch />} />
           <Route path="/cutsheetrx" element={<CutSheetRX />} />
         </Routes>
+        <AssistantFloat />
       </div>
     </div>
   );

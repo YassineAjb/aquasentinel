@@ -21,6 +21,7 @@ import { AssistantModule } from './assistant/assistant.module';
     SitesModule,
     WeatherModule,
     IrrigationModule,
+    AssistantModule,
   ],
   controllers: [HealthController],
 })
