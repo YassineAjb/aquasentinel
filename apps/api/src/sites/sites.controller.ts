@@ -76,6 +76,11 @@ export class SitesController {
     return this.sitesService.irrigationPlan(id, dto || {});
   }
 
+  @Post(':id/pump-windows')
+  pumpWindows(@Param('id') id: string, @Body() dto: IrrigationPlanDto) {
+    return this.sitesService.pumpWindows(id, dto || {});
+  }
+
   @Get(':id/observations')
   listObservations(@Param('id') id: string) {
     return this.sitesService.listObservations(id);

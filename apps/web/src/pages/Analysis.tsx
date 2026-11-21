@@ -553,6 +553,58 @@ export default function Analysis() {
                 {irrigation.label} · narrative via {irrigation.narrative.source}
               </p>
               <p className="hint">{irrigation.honesty}</p>
+
+              {irrigation.pumpWindows && (
+                <div className="pump-windows">
+                  <div className="panel-head tight">
+                    <h3>{irrigation.pumpWindows.label}</h3>
+                  </div>
+                  <div className="stat">
+                    <span>Soft windows</span>
+                    <span>
+                      {irrigation.pumpWindows.summary.softWindows} · ~
+                      {irrigation.pumpWindows.summary.totalKwhEstimate} kWh
+                    </span>
+                  </div>
+                  <div className="stat">
+                    <span>vs peak (est.)</span>
+                    <span>
+                      ~{irrigation.pumpWindows.summary.totalKwhSavedVsPeak} kWh
+                      saved
+                    </span>
+                  </div>
+                  {irrigation.pumpWindows.summary.blockedByInspect && (
+                    <p className="status error">
+                      Pump advice blocked — inspect field first (NDVI flag).
+                    </p>
+                  )}
+                  <ul className="schedule-list">
+                    {irrigation.pumpWindows.windows.map((row) => (
+                      <li
+                        key={`pw-${row.date}`}
+                        className={`sched-pump-${row.quality}`}
+                      >
+                        <strong>{row.date}</strong>
+                        <span>
+                          {row.quality === 'soft'
+                            ? `${String(row.startHour).padStart(2, '0')}:00–${String(row.endHour).padStart(2, '0')}:00 soft`
+                            : row.quality}
+                          {row.volumeM3 > 0
+                            ? ` · ${row.volumeM3} m³ · ~${row.estimatedKwh} kWh`
+                            : ''}
+                        </span>
+                        <em>{row.reason}</em>
+                      </li>
+                    ))}
+                  </ul>
+                  <ul className="pump-assumptions">
+                    {irrigation.pumpWindows.assumptions.map((a) => (
+                      <li key={a}>{a}</li>
+                    ))}
+                  </ul>
+                  <p className="hint">{irrigation.pumpWindows.honesty}</p>
+                </div>
+              )}
             </>
           )}
         </section>

@@ -26,6 +26,34 @@ export type Site = {
   soilType?: string;
 };
 
+export type PumpWindowRow = {
+  date: string;
+  startHour: number;
+  endHour: number;
+  slot: 'morning_soft' | 'evening_soft' | 'none';
+  quality: 'soft' | 'skip' | 'blocked';
+  volumeMm: number;
+  volumeM3: number;
+  estimatedKwh: number;
+  vsPeakKwhSaved: number;
+  reason: string;
+};
+
+export type PumpWindows = {
+  label: string;
+  windows: PumpWindowRow[];
+  summary: {
+    irrigateEvents: number;
+    softWindows: number;
+    skipEvents: number;
+    blockedByInspect: boolean;
+    totalKwhEstimate: number;
+    totalKwhSavedVsPeak: number;
+  };
+  assumptions: string[];
+  honesty: string;
+};
+
 export type IrrigationPlan = {
   siteId: string;
   generatedAt: string;
@@ -45,6 +73,7 @@ export type IrrigationPlan = {
     volumeM3: number;
     reason: string;
   }[];
+  pumpWindows?: PumpWindows;
   facts: Record<string, unknown>;
   narrative: { text: string; source: 'template' | 'ollama' | 'openai' };
   honesty: string;
@@ -279,6 +308,18 @@ export const api = {
     }),
   irrigationPlan: (siteId: string, observationId?: string) =>
     request<IrrigationPlan>(`/sites/${siteId}/irrigation-plan`, {
+      method: 'POST',
+      body: JSON.stringify(observationId ? { observationId } : {}),
+    }),
+  pumpWindows: (siteId: string, observationId?: string) =>
+    request<{
+      siteId: string;
+      generatedAt: string;
+      estimate: IrrigationPlan['estimate'];
+      schedule: IrrigationPlan['schedule'];
+      pumpWindows: PumpWindows;
+      honesty: string;
+    }>(`/sites/${siteId}/pump-windows`, {
       method: 'POST',
       body: JSON.stringify(observationId ? { observationId } : {}),
     }),

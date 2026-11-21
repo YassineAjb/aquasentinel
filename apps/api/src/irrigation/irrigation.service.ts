@@ -281,6 +281,11 @@ export class IrrigationService {
     };
 
     const narrative = await this.narrate(facts, estimate, schedule);
+    const pumpWindows = this.buildPumpWindows(schedule, {
+      areaHa,
+      ndviMean,
+      timezoneNote: 'Africa/Tunis (UTC+1 approx.)',
+    });
 
     return {
       siteId,
@@ -289,10 +294,149 @@ export class IrrigationService {
         'Generated irrigation advice (rules from structured facts — not a diagnosis or pump command)',
       estimate,
       schedule,
+      pumpWindows,
       facts,
       narrative,
       honesty:
         'NDVI is not soil moisture. Open-Meteo is not an on-field gauge. Farmer decides.',
+    };
+  }
+
+  /**
+   * Soft grid windows for Tunisia-style weak/peak grids:
+   * prefer cool off-peak mornings; avoid midday heat + residential peak.
+   * kWh is a rule sketch (lift pump), not a meter reading.
+   */
+  private buildPumpWindows(
+    schedule: {
+      date: string;
+      action: 'irrigate' | 'skip' | 'inspect';
+      volumeMm: number;
+      volumeM3: number;
+      reason: string;
+    }[],
+    ctx: {
+      areaHa: number;
+      ndviMean: number | null;
+      timezoneNote: string;
+    },
+  ) {
+    /** Rough farm centrifugal lift: kWh per m³ lifted/pumped */
+    const kWhPerM3 = 0.45;
+    const peakMultiplier = 1.35;
+    const softStartHour = 5;
+    const softEndHour = 7;
+    const eveningStartHour = 21;
+    const eveningEndHour = 23;
+
+    const blockedByInspect =
+      schedule.some((s) => s.action === 'inspect') ||
+      (ctx.ndviMean != null && ctx.ndviMean < 0.2);
+
+    const windows: {
+      date: string;
+      startHour: number;
+      endHour: number;
+      slot: 'morning_soft' | 'evening_soft' | 'none';
+      quality: 'soft' | 'skip' | 'blocked';
+      volumeMm: number;
+      volumeM3: number;
+      estimatedKwh: number;
+      vsPeakKwhSaved: number;
+      reason: string;
+    }[] = [];
+
+    for (const row of schedule) {
+      if (row.action === 'inspect' || blockedByInspect && row.action === 'irrigate') {
+        windows.push({
+          date: row.date,
+          startHour: 0,
+          endHour: 0,
+          slot: 'none',
+          quality: 'blocked',
+          volumeMm: 0,
+          volumeM3: 0,
+          estimatedKwh: 0,
+          vsPeakKwhSaved: 0,
+          reason:
+            'Inspect first — pump window withheld until ground check clears the NDVI flag.',
+        });
+        continue;
+      }
+      if (row.action === 'skip') {
+        windows.push({
+          date: row.date,
+          startHour: 0,
+          endHour: 0,
+          slot: 'none',
+          quality: 'skip',
+          volumeMm: 0,
+          volumeM3: 0,
+          estimatedKwh: 0,
+          vsPeakKwhSaved: 0,
+          reason: `No pump — ${row.reason}`,
+        });
+        continue;
+      }
+
+      // Prefer morning soft; evening as alternate if morning clashes with rain carry (already skipped)
+      const estimatedKwh = Number((row.volumeM3 * kWhPerM3).toFixed(2));
+      const vsPeakKwhSaved = Number(
+        (row.volumeM3 * kWhPerM3 * (peakMultiplier - 1)).toFixed(2),
+      );
+      windows.push({
+        date: row.date,
+        startHour: softStartHour,
+        endHour: softEndHour,
+        slot: 'morning_soft',
+        quality: 'soft',
+        volumeMm: row.volumeMm,
+        volumeM3: row.volumeM3,
+        estimatedKwh,
+        vsPeakKwhSaved,
+        reason: `Soft grid window ${String(softStartHour).padStart(2, '0')}:00–${String(softEndHour).padStart(2, '0')}:00 · avoid 11:00–16:00 peak · alt ${String(eveningStartHour).padStart(2, '0')}:00–${String(eveningEndHour).padStart(2, '0')}:00 · ~${estimatedKwh} kWh (vs peak save ~${vsPeakKwhSaved} kWh).`,
+      });
+    }
+
+    const soft = windows.filter((w) => w.quality === 'soft');
+    const summary = {
+      irrigateEvents: soft.length,
+      softWindows: soft.length,
+      skipEvents: windows.filter((w) => w.quality === 'skip').length,
+      blockedByInspect,
+      totalKwhEstimate: Number(
+        soft.reduce((a, w) => a + w.estimatedKwh, 0).toFixed(2),
+      ),
+      totalKwhSavedVsPeak: Number(
+        soft.reduce((a, w) => a + w.vsPeakKwhSaved, 0).toFixed(2),
+      ),
+    };
+
+    return {
+      label: 'Pump Window — irrigate when the grid is softest',
+      windows,
+      summary,
+      assumptions: [
+        `Pump energy sketch ≈ ${kWhPerM3} kWh/m³ (typical farm lift; not a meter).`,
+        `Peak penalty ×${peakMultiplier} vs soft window (indicative grid/heat stress, not STEG tariff).`,
+        `Preferred slot ${softStartHour}:00–${softEndHour}:00 local; avoid 11:00–16:00; evening alt ${eveningStartHour}:00–${eveningEndHour}:00.`,
+        ctx.timezoneNote,
+        `Field area used ≈ ${ctx.areaHa.toFixed(3)} ha.`,
+      ],
+      honesty:
+        'Pump Window is decision support only — not a pump controller, not a STEG schedule, not a kWh guarantee.',
+    };
+  }
+
+  async pumpWindows(siteId: string, observationId?: string) {
+    const plan = await this.plan(siteId, observationId);
+    return {
+      siteId: plan.siteId,
+      generatedAt: plan.generatedAt,
+      estimate: plan.estimate,
+      schedule: plan.schedule,
+      pumpWindows: plan.pumpWindows,
+      honesty: plan.pumpWindows.honesty,
     };
   }
 

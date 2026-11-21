@@ -175,6 +175,10 @@ export class SitesService {
     return this.irrigationService.plan(siteId, dto.observationId);
   }
 
+  pumpWindows(siteId: string, dto: IrrigationPlanDto = {}) {
+    return this.irrigationService.pumpWindows(siteId, dto.observationId);
+  }
+
   async scan(siteId: string, dto: ScanDto = {}) {
     const site = await this.findOne(siteId);
     const feature = {

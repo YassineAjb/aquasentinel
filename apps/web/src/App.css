@@ -924,6 +924,50 @@ h2 {
   opacity: 0.85;
 }
 
+.schedule-list li.sched-pump-soft {
+  border-color: rgba(64, 168, 210, 0.5);
+}
+
+.schedule-list li.sched-pump-blocked {
+  border-color: rgba(255, 176, 80, 0.55);
+}
+
+.schedule-list li.sched-pump-skip {
+  opacity: 0.85;
+}
+
+.pump-windows {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+}
+
+.pump-windows h3 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: #d7e8df;
+}
+
+.panel-head.tight {
+  margin-bottom: 0.35rem;
+}
+
+.pump-assumptions {
+  list-style: none;
+  margin: 0.55rem 0 0.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pump-assumptions li {
+  font-size: 0.7rem;
+  color: var(--faint);
+  line-height: 1.35;
+}
+
 .mono {
   font-size: 0.7rem;
   max-width: 160px;
@@ -1359,7 +1403,7 @@ h2 {
 
 }
 
-/* Ã¢ÂÂÃ¢ÂÂ RainCatch (map-first) Ã¢ÂÂÃ¢ÂÂ */
+/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ RainCatch (map-first) ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */
 .rc-stage {
   position: relative;
   flex: 1;
@@ -1898,7 +1942,7 @@ h2 {
   }
 }
 
-/* Ã¢ÂÂÃ¢ÂÂ CutSheetRX webview Ã¢ÂÂÃ¢ÂÂ */
+/* ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ CutSheetRX webview ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ */
 .csrx-stage {
   flex: 1;
   min-height: 0;
@@ -1923,7 +1967,7 @@ h2 {
   background: #111;
 }
 
-/* Host logo/title cover â flush with their left drawer */
+/* Host logo/title cover Ã¢ÂÂ flush with their left drawer */
 .csrx-brand-cover {
   position: absolute;
   top: 0;
@@ -2053,7 +2097,7 @@ h2 {
   }
 }
 
-/* ââ Field assistant (centered liquid glass) ââ */
+/* Ã¢ÂÂÃ¢ÂÂ Field assistant (centered liquid glass) Ã¢ÂÂÃ¢ÂÂ */
 .assistant-fab {
   position: fixed;
   right: 1.15rem;
