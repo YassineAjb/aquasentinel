@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AquaSentinel — Draw field & scan</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #0f1410;
+      color: #e8f0e9;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+    }
+    aside {
+      background: linear-gradient(165deg, #1a221c 0%, #121812 100%);
+      padding: 1.2rem 1.25rem;
+      border-right: 1px solid #2a352c;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    h1 { font-size: 1.2rem; letter-spacing: 0.02em; }
+    .sub { color: #a3b5a6; font-size: 0.86rem; line-height: 1.45; }
+    .steps {
+      background: #141a15;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-size: 0.84rem;
+      line-height: 1.55;
+      color: #c5d4c7;
+    }
+    .steps strong { color: #e8f0e9; }
+    .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    #scanBtn {
+      background: #2f9e44;
+      color: #fff;
+      flex: 1;
+    }
+    #scanBtn:disabled {
+      background: #3a4a3c;
+      color: #8a9a8c;
+      cursor: not-allowed;
+    }
+    #clearBtn {
+      background: #2a352c;
+      color: #d7e4d9;
+    }
+    .status {
+      min-height: 1.2rem;
+      font-size: 0.82rem;
+      color: #9ec5a3;
+    }
+    .status.error { color: #ff8f8f; }
+    .status.busy { color: #ffe08a; }
+    .panel {
+      background: #141a15;
+      border-radius: 10px;
+      padding: 0.75rem 0.9rem;
+      display: none;
+    }
+    .panel.visible { display: block; }
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid #2a352c;
+      font-size: 0.88rem;
+    }
+    .stat:last-child { border-bottom: 0; }
+    .stat span:last-child {
+      color: #b8e0bc;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+    h2 {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #8a9a8c;
+      margin-bottom: 0.35rem;
+    }
+    .legend .swatch {
+      height: 10px;
+      border-radius: 4px;
+      margin: 0.45rem 0 0.3rem;
+      background: linear-gradient(90deg, #ffb428, #ffe66d, #7ed957, #1faa3c);
+    }
+    .legend-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #9aa89c;
+    }
+    #map { width: 100%; height: 100%; }
+    .leaflet-draw-toolbar a { background-color: #1a221c; }
+  </style>
+</head>
+<body>
+  <aside>
+    <div>
+      <h1>AquaSentinel</h1>
+      <p class="sub">Draw your field borders on the satellite map, then run an NDVI vegetation scan.</p>
+    </div>
+
+    <div class="steps">
+      <div><strong>1.</strong> Click the polygon tool (pentagon) on the map.</div>
+      <div><strong>2.</strong> Click corners of the field. Double-click or click the first point to close.</div>
+      <div><strong>3.</strong> Press <strong>Scan field</strong>.</div>
+    </div>
+
+    <div class="actions">
+      <button id="scanBtn" disabled>Scan field</button>
+      <button id="clearBtn" type="button">Clear</button>
+    </div>
+    <div id="status" class="status">Draw a field polygon to begin.</div>
+
+    <div id="report" class="panel">
+      <h2>Field report</h2>
+      <div class="stat"><span>Scene date</span><span id="rDate">—</span></div>
+      <div class="stat"><span>Cloud cover</span><span id="rCloud">—</span></div>
+      <div class="stat"><span>Field area</span><span id="rArea">—</span></div>
+      <div class="stat"><span>Avg NDVI</span><span id="rAvg">—</span></div>
+      <div class="stat"><span>Min / Max</span><span id="rMinMax">—</span></div>
+      <div class="stat"><span>Valid pixels</span><span id="rPixels">—</span></div>
+    </div>
+
+    <div id="veg" class="panel">
+      <h2>Vegetation</h2>
+      <div class="stat"><span>Sparse</span><span id="rSparse">—</span></div>
+      <div class="stat"><span>Moderate</span><span id="rModerate">—</span></div>
+      <div class="stat"><span>Dense</span><span id="rDense">—</span></div>
+      <div class="legend" style="margin-top:0.7rem">
+        <div class="swatch"></div>
+        <div class="legend-row"><span>Sparse</span><span>Dense</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script>
+    const START = [36.8643806, 9.9736194];
+
+    const map = L.map("map", { zoomControl: true }).setView(START, 17);
+    L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      { attribution: "Esri World Imagery", maxZoom: 19 }
+    ).addTo(map);
+
+    const drawnItems = new L.FeatureGroup().addTo(map);
+    let ndviLayer = null;
+    let currentFeature = null;
+
+    const drawControl = new L.Control.Draw({
+      position: "topleft",
+      draw: {
+        polygon: {
+          allowIntersection: false,
+          showArea: true,
+          shapeOptions: { color: "#e74c3c", weight: 2, fillOpacity: 0.08 },
+        },
+        polyline: false,
+        rectangle: {
+          shapeOptions: { color: "#e74c3c", weight: 2, fillOpacity: 0.08 },
+        },
+        circle: false,
+        circlemarker: false,
+        marker: false,
+      },
+      edit: { featureGroup: drawnItems, remove: true },
+    });
+    map.addControl(drawControl);
+
+    const scanBtn = document.getElementById("scanBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const statusEl = document.getElementById("status");
+
+    function setStatus(text, kind) {
+      statusEl.textContent = text;
+      statusEl.className = "status" + (kind ? " " + kind : "");
+    }
+
+    function enableScan(on) {
+      scanBtn.disabled = !on;
+    }
+
+    function clearOverlay() {
+      if (ndviLayer) {
+        map.removeLayer(ndviLayer);
+        ndviLayer = null;
+      }
+    }
+
+    function resetReport() {
+      document.getElementById("report").classList.remove("visible");
+      document.getElementById("veg").classList.remove("visible");
+    }
+
+    function onFieldReady(layer) {
+      drawnItems.clearLayers();
+      clearOverlay();
+      resetReport();
+      drawnItems.addLayer(layer);
+      currentFeature = layer.toGeoJSON();
+      // Normalize rectangle → polygon already handled by Leaflet
+      if (currentFeature.geometry.type === "Polygon") {
+        enableScan(true);
+        setStatus("Field ready. Click Scan field.");
+      }
+    }
+
+    map.on(L.Draw.Event.CREATED, (e) => onFieldReady(e.layer));
+    map.on(L.Draw.Event.EDITED, () => {
+      const layers = drawnItems.getLayers();
+      if (layers.length) {
+        currentFeature = layers[0].toGeoJSON();
+        enableScan(true);
+        setStatus("Field updated. Scan again to refresh NDVI.");
+        clearOverlay();
+        resetReport();
+      }
+    });
+    map.on(L.Draw.Event.DELETED, () => {
+      currentFeature = null;
+      enableScan(false);
+      clearOverlay();
+      resetReport();
+      setStatus("Draw a field polygon to begin.");
+    });
+
+    clearBtn.addEventListener("click", () => {
+      drawnItems.clearLayers();
+      currentFeature = null;
+      enableScan(false);
+      clearOverlay();
+      resetReport();
+      setStatus("Draw a field polygon to begin.");
+    });
+
+    function fmtHa(v) {
+      return Number(v).toFixed(3) + " ha";
+    }
+    function fmtPct(v) {
+      return Number(v).toFixed(1) + "%";
+    }
+    function fmtNdvi(v) {
+      return Number(v).toFixed(4);
+    }
+
+    function showReport(data) {
+      document.getElementById("report").classList.add("visible");
+      document.getElementById("veg").classList.add("visible");
+      document.getElementById("rDate").textContent = data.scene.date;
+      document.getElementById("rCloud").textContent = data.scene.cloud + "%";
+      document.getElementById("rArea").textContent = fmtHa(data.field.area_ha);
+      document.getElementById("rAvg").textContent = fmtNdvi(data.ndvi.average);
+      document.getElementById("rMinMax").textContent =
+        fmtNdvi(data.ndvi.minimum) + " / " + fmtNdvi(data.ndvi.maximum);
+      document.getElementById("rPixels").textContent = String(data.ndvi.valid_pixels);
+
+      const s = data.vegetation.sparse;
+      const m = data.vegetation.moderate;
+      const d = data.vegetation.dense;
+      document.getElementById("rSparse").textContent =
+        fmtHa(s.area_ha) + " (" + fmtPct(s.percentage) + ")";
+      document.getElementById("rModerate").textContent =
+        fmtHa(m.area_ha) + " (" + fmtPct(m.percentage) + ")";
+      document.getElementById("rDense").textContent =
+        fmtHa(d.area_ha) + " (" + fmtPct(d.percentage) + ")";
+    }
+
+    scanBtn.addEventListener("click", async () => {
+      if (!currentFeature) return;
+      enableScan(false);
+      setStatus("Scanning Sentinel-2 NDVI for your field…", "busy");
+      clearOverlay();
+
+      try {
+        const res = await fetch("/api/scan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ feature: currentFeature }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || "Scan failed");
+        }
+
+        const url = "data:image/png;base64," + data.overlay.image_base64;
+        ndviLayer = L.imageOverlay(url, data.overlay.bounds, {
+          opacity: data.overlay.opacity,
+          interactive: false,
+        }).addTo(map);
+
+        map.fitBounds(data.overlay.bounds, { padding: [36, 36] });
+        showReport(data);
+        setStatus("Scan complete — vegetation report ready.");
+      } catch (err) {
+        setStatus(err.message || String(err), "error");
+      } finally {
+        enableScan(!!currentFeature);
+      }
+    });
+  </script>
+</body>
+</html>

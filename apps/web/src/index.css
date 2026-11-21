@@ -1,0 +1,86 @@
+:root {
+  --bg: #0c1210;
+  --bg-aside: #101714;
+  --bg-panel: rgba(18, 28, 22, 0.92);
+  --bg-panel-2: #162019;
+  --line: rgba(120, 150, 128, 0.22);
+  --text: #e7f0e8;
+  --muted: #8fa396;
+  --faint: #6d7f72;
+  --accent: #2f9e44;
+  --accent-soft: #1e6b30;
+  --warn: #ffe08a;
+  --danger: #ffb4a8;
+  --ok: #9ec5a3;
+  --radius: 12px;
+  --font: 'Figtree', 'Segoe UI', sans-serif;
+  --display: 'Source Serif 4', Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #1a3324 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #14241c 0%, transparent 45%),
+    var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.7rem 0.95rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+button:disabled {
+  background: #2a3830 !important;
+  color: #7a8b7e !important;
+  cursor: not-allowed;
+}
+
+input,
+select {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #0d1511;
+  color: var(--text);
+  padding: 0.65rem 0.8rem;
+  font-family: inherit;
+  font-size: 0.92rem;
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid rgba(47, 158, 68, 0.35);
+  outline-offset: 1px;
+  border-color: rgba(47, 158, 68, 0.55);
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: #0b100c;
+}
+
+.leaflet-image-layer.s2-overlay {
+  image-rendering: auto !important;
+  filter: saturate(1.15) contrast(1.05);
+}

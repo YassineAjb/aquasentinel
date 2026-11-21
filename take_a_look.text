@@ -1,0 +1,24 @@
+AquaSentinel — team brief (Kizuna 2026)
+
+Idea
+AI-assisted field monitoring: pick a farm site on a map, pull satellite imagery, compute NDVI / vegetation stats, compare dates, and flag areas that need inspection. Goal = help farmers use less water and less pump energy by acting only where the crop is stressed.
+
+Why it fits Kizuna (water × energy × food)
+- Agriculture: see field condition over time
+- Water: irrigate / intervene only where needed
+- Energy: fewer wasted pump cycles when the grid is weak
+Core product is satellite + software. IoT (Pi / solar) is optional stretch only — not required for the demo.
+
+MVP (must ship in ~34h)
+1. Create a site + draw/upload field boundary
+2. Fetch Sentinel-2 imagery (cloud filter)
+3. Show map + NDVI + mean/min/max + date/source
+4. Compare two dates (Δ NDVI)
+5. Simple “inspect” flag + short evidence-based summary
+6. One-page monitoring report
+
+Skip for now
+Full IoT sensors, solar power demo, drought diagnosis claims, heavy auth, big AI claims without evidence.
+
+Pitch one-liner
+“See crop stress from space early — so Tunisia’s farms waste less water and less energy when the grid can’t keep the pumps running.”

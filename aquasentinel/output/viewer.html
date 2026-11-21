@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AquaSentinel — Clear NDVI</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #0f1410;
+      color: #e8f0e9;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+    }
+    aside {
+      background: linear-gradient(165deg, #1a221c 0%, #121812 100%);
+      padding: 1.25rem;
+      border-right: 1px solid #2a352c;
+      overflow: auto;
+    }
+    h1 { font-size: 1.15rem; margin-bottom: 0.35rem; }
+    .sub { color: #a3b5a6; font-size: 0.85rem; margin-bottom: 1.25rem; line-height: 1.4; }
+    .stat {
+      display: flex; justify-content: space-between;
+      padding: 0.55rem 0; border-bottom: 1px solid #2a352c; font-size: 0.9rem;
+    }
+    .stat span:last-child { color: #b8e0bc; }
+    .legend { margin-top: 1.25rem; padding: 0.75rem; background: #141a15; border-radius: 8px; }
+    .swatch {
+      height: 12px; border-radius: 4px; margin: 0.5rem 0;
+      background: linear-gradient(90deg, #ffb428, #ffe66d, #7ed957, #1faa3c);
+    }
+    .hint { font-size: 0.78rem; color: #8a9a8c; line-height: 1.45; margin-top: 0.75rem; }
+    #map { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <aside>
+    <h1>AquaSentinel NDVI</h1>
+    <p class="sub">High-res satellite basemap + smoothed Sentinel-2 NDVI — Google Earth–style clarity.</p>
+    <div class="stat"><span>Scene date</span><span>2026-11-15</span></div>
+    <div class="stat"><span>Cloud cover</span><span>0.180743%</span></div>
+    <div class="stat"><span>Avg NDVI</span><span>0.257</span></div>
+    <div class="stat"><span>Field area</span><span>4.295 ha</span></div>
+    <div class="stat"><span>Coverage</span><span>99.97%</span></div>
+    <div class="legend">
+      <div>Vegetation index</div>
+      <div class="swatch"></div>
+      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:#9aa89c">
+        <span>Sparse</span><span>Dense</span>
+      </div>
+    </div>
+    <p class="hint">
+      Basemap = Esri World Imagery (same clarity class as Google Earth).<br/><br/>
+      NDVI = real Sentinel-2 @ 10 m, bicubic-upsampled for display.<br/><br/>
+      To open in Google Earth: File → Import →
+      <code>AquaSentinel_NDVI.kmz</code>
+    </p>
+  </aside>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const bounds = [[36.862580599999994, 9.971819400000001], [36.8661806, 9.9754194]];
+    const map = L.map("map", { zoomControl: true }).fitBounds(bounds, { padding: [40, 40] });
+    const esri = L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      { attribution: "Esri World Imagery", maxZoom: 19 }
+    ).addTo(map);
+    const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19, attribution: "© OpenStreetMap"
+    });
+    const ndvi = L.imageOverlay("ndvi_clear.png", bounds, { opacity: 0.75 });
+    ndvi.addTo(map);
+    L.control.layers(
+      { "Satellite (clear)": esri, "Streets": osm },
+      { "AquaSentinel NDVI": ndvi }
+    ).addTo(map);
+    L.rectangle(bounds, { color: "#e74c3c", weight: 2, fill: false }).addTo(map);
+  </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Header,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
+import type { Response } from 'express';
+import { CompareDto } from './dto/compare.dto';
+import { CreateSiteDto } from './dto/create-site.dto';
+import { ScanDto } from './dto/scan.dto';
+import { UpdateSiteDto } from './dto/update-site.dto';
+import { SitesService } from './sites.service';
+
+@Controller('sites')
+export class SitesController {
+  constructor(private readonly sitesService: SitesService) {}
+
+  @Post()
+  create(@Body() dto: CreateSiteDto) {
+    return this.sitesService.create(dto);
+  }
+
+  @Get()
+  findAll() {
+    return this.sitesService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.sitesService.findOne(id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateSiteDto) {
+    return this.sitesService.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.sitesService.remove(id);
+  }
+
+  @Post(':id/scan')
+  scan(@Param('id') id: string, @Body() dto: ScanDto) {
+    return this.sitesService.scan(id, dto || {});
+  }
+
+  @Get(':id/observations')
+  listObservations(@Param('id') id: string) {
+    return this.sitesService.listObservations(id);
+  }
+
+  @Get(':id/observations/:obsId/image/:kind')
+  async observationImage(
+    @Param('id') id: string,
+    @Param('obsId') obsId: string,
+    @Param('kind') kind: 'ndvi' | 'truecolor',
+    @Query('variant') variant: string | undefined,
+    @Res() res: Response,
+  ) {
+    const buf = await this.sitesService.getObservationImage(
+      id,
+      obsId,
+      kind === 'truecolor' ? 'truecolor' : 'ndvi',
+      variant === 'enhanced' ? 'enhanced' : 'original',
+    );
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    if (variant === 'enhanced') {
+      res.setHeader('X-AquaSentinel-Visual', 'derived-enhanced');
+    }
+    res.send(buf);
+  }
+
+  @Get(':id/observations/:obsId')
+  getObservation(@Param('id') id: string, @Param('obsId') obsId: string) {
+    return this.sitesService.getObservation(id, obsId);
+  }
+
+  @Post(':id/compare')
+  compare(@Param('id') id: string, @Body() dto: CompareDto) {
+    return this.sitesService.compare(id, dto);
+  }
+
+  @Get(':id/report')
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  async report(
+    @Param('id') id: string,
+    @Query('a') a: string,
+    @Query('b') b: string,
+    @Res() res: Response,
+  ) {
+    const html = await this.sitesService.reportHtml(id, a, b);
+    res.send(html);
+  }
+}

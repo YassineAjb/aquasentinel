@@ -1,0 +1,58 @@
+{
+  "siteId": "6b00c10f59eef0c033c63335",
+  "siteName": "Kizuna demo field",
+  "observations": [
+    {
+      "id": "6b00c11459eef0c033c63336",
+      "acquiredAt": "2026-11-15",
+      "mean": 0.2049145780051151,
+      "cloudCover": 0.169,
+      "sceneId": "S2A_MSIL2A_20261115T101211_R022_T32SPF_20261115T164806"
+    },
+    {
+      "id": "6b00c11959eef0c033c63337",
+      "acquiredAt": "2026-11-13",
+      "mean": 0.20953452685421994,
+      "cloudCover": 0.931,
+      "sceneId": "S2C_MSIL2A_20261113T101251_R022_T32SPF_20261113T140509"
+    },
+    {
+      "id": "6b00c11e59eef0c033c63338",
+      "acquiredAt": "2026-11-08",
+      "mean": 0.2230833759590793,
+      "cloudCover": 9.799,
+      "sceneId": "S2B_MSIL2A_20261108T101139_R022_T32SNF_20261108T154414"
+    }
+  ],
+  "compare": {
+    "aId": "6b00c11e59eef0c033c63338",
+    "bId": "6b00c11459eef0c033c63336",
+    "aDate": "2026-11-08",
+    "bDate": "2026-11-15",
+    "deltaMeanNdvi": -0.0182,
+    "inspect": {
+      "flag": false,
+      "threshold": 0.08,
+      "reason": "No inspect threshold crossed",
+      "evidence": [
+        "Earlier 2026-11-08: mean NDVI 0.2231 (cloud 9.799%)",
+        "Later 2026-11-15: mean NDVI 0.2049 (cloud 0.169%)",
+        "\u0394 mean NDVI = -0.0182 (negative = decline)",
+        "Coverage OK on both dates (\u2265 70% valid pixels)",
+        "Rule: inspect only if drop \u2265 0.08"
+      ]
+    },
+    "interpretation": {
+      "label": "Generated interpretation (rules from structured stats \u2014 not a diagnosis)",
+      "text": "From 2026-11-08 to 2026-11-15, mean field NDVI went from 0.223 to 0.205 (\u0394 -0.0182). Scene cloud cover: 9.799% \u2192 0.169%. Valid-pixel coverage was adequate on both dates. Decline is below the inspect threshold; keep monitoring on the next clear scene.",
+      "factsOnly": true
+    }
+  },
+  "reportUrl": "http://127.0.0.1:3000/sites/6b00c10f59eef0c033c63335/report?a=6b00c11e59eef0c033c63338&b=6b00c11459eef0c033c63336",
+  "demoPath": [
+    "Open http://localhost:5173",
+    "History already in Mongo for Kizuna demo field",
+    "Compare 2026-11-08 -> 2026-11-15",
+    "Report http://127.0.0.1:3000/sites/6b00c10f59eef0c033c63335/report?a=6b00c11e59eef0c033c63338&b=6b00c11459eef0c033c63336"
+  ]
+}
