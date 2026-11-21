@@ -23,6 +23,7 @@ const en: Dict = {
   'nav.language': 'Language',
   'brand.tag': 'Water · energy · food',
 
+
   'landing.headline': 'Crop stress from space — so farms waste less water and energy.',
   'landing.lead':
     'Draw a Tunisia field, pull clear Sentinel-2 scenes, and compare NDVI with provenance you can defend in a pitch.',
@@ -151,6 +152,11 @@ const en: Dict = {
   'csrx.open': 'Open',
   'csrx.tag': 'Terrain · LiDAR',
   'csrx.controls': 'Embed controls',
+  'csrx.fallbackTitle': 'Couldn’t load the embed',
+  'csrx.fallbackBody':
+    'The host may block framing. Open the tool in a new tab instead.',
+  'csrx.openTab': 'Open in new tab',
+  'csrx.tryAgain': 'Try again',
 
   'assistant.title': 'Field assistant',
   'assistant.open': 'Open field assistant',
@@ -183,12 +189,13 @@ const ar: Dict = {
   'nav.sites': 'الحقول',
   'nav.analysis': 'التحليل',
   'nav.waterguard': 'حارس الماء',
-  'nav.cutsheetrx': 'CutSheetRX',
+  'nav.cutsheetrx': 'تضاريس LiDAR',
   'nav.collapse': 'طي الشريط',
   'nav.expand': 'توسيع الشريط',
   'nav.main': 'القائمة',
   'nav.language': 'اللغة',
   'brand.tag': 'ماء · طاقة · غذاء',
+
 
   'landing.headline': 'إجهاد المحاصيل من الفضاء — لتقليل هدر الماء والطاقة في المزارع.',
   'landing.lead':
@@ -318,6 +325,11 @@ const ar: Dict = {
   'csrx.open': 'فتح',
   'csrx.tag': 'تضاريس · LiDAR',
   'csrx.controls': 'عناصر التحكم',
+  'csrx.fallbackTitle': 'تعذّر تحميل الأداة',
+  'csrx.fallbackBody':
+    'قد يمنع المضيف التضمين. افتح الأداة في تبويب جديد.',
+  'csrx.openTab': 'فتح في تبويب جديد',
+  'csrx.tryAgain': 'حاول مجدداً',
 
   'assistant.title': 'مساعد الحقل',
   'assistant.open': 'فتح مساعد الحقل',
@@ -349,13 +361,14 @@ const ja: Dict = {
   'nav.dashboard': 'ダッシュボード',
   'nav.sites': '圃場',
   'nav.analysis': '分析',
-  'nav.waterguard': 'WaterGuard',
-  'nav.cutsheetrx': 'CutSheetRX',
+  'nav.waterguard': '水ガード',
+  'nav.cutsheetrx': '地形LiDAR',
   'nav.collapse': '折りたたむ',
   'nav.expand': 'サイドバーを開く',
   'nav.main': 'メイン',
   'nav.language': '言語',
   'brand.tag': '水 · エネルギー · 食料',
+
 
   'landing.headline': '衛星で作物ストレスを把握 — 水とエネルギーの無駄を減らす。',
   'landing.lead':
@@ -485,6 +498,11 @@ const ja: Dict = {
   'csrx.open': '開く',
   'csrx.tag': '地形 · LiDAR',
   'csrx.controls': '埋め込み操作',
+  'csrx.fallbackTitle': '埋め込みを読み込めませんでした',
+  'csrx.fallbackBody':
+    'ホストがフレーム埋め込みを拒否している可能性があります。新しいタブで開いてください。',
+  'csrx.openTab': '新しいタブで開く',
+  'csrx.tryAgain': '再試行',
 
   'assistant.title': 'フィールドアシスタント',
   'assistant.open': 'アシスタントを開く',

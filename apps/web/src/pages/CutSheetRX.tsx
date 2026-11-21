@@ -60,8 +60,8 @@ export default function CutSheetRX() {
           </>
         ) : (
           <div className="csrx-fallback">
-            <p className="empty-title">Couldn’t load the embed</p>
-            <p>The host may block framing. Open the tool in a new tab instead.</p>
+            <p className="empty-title">{t('csrx.fallbackTitle')}</p>
+            <p>{t('csrx.fallbackBody')}</p>
             <div className="csrx-fallback-actions">
               <a
                 className="primary inline"
@@ -69,10 +69,10 @@ export default function CutSheetRX() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Open in new tab
+                {t('csrx.openTab')}
               </a>
               <button type="button" className="ghost" onClick={reload}>
-                Try again
+                {t('csrx.tryAgain')}
               </button>
             </div>
           </div>
