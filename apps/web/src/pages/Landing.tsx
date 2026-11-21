@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { useLanguage } from '../i18n';
 
 type LiveStats = {
   sites: number;
@@ -21,6 +22,7 @@ const DEMO = {
 };
 
 export default function Landing() {
+  const { t } = useLanguage();
   const [live, setLive] = useState<LiveStats>({
     sites: 0,
     scans: 0,
@@ -65,17 +67,14 @@ export default function Landing() {
         <div className="landing-hero-veil" aria-hidden />
         <div className="landing-stage">
           <p className="landing-brand">AquaSentinel</p>
-          <h1>Crop stress from space — so farms waste less water and energy.</h1>
-          <p className="landing-lead">
-            Draw a Tunisia field, pull clear Sentinel-2 scenes, and compare NDVI
-            with provenance you can defend in a pitch.
-          </p>
+          <h1>{t('landing.headline')}</h1>
+          <p className="landing-lead">{t('landing.lead')}</p>
           <div className="landing-cta">
             <Link className="primary inline" to="/dashboard">
-              Open dashboard
+              {t('landing.openDashboard')}
             </Link>
             <Link className="ghost inline" to="/analysis">
-              Run analysis
+              {t('landing.runAnalysis')}
             </Link>
           </div>
         </div>
@@ -83,47 +82,47 @@ export default function Landing() {
 
       <section className="landing-section landing-data">
         <header className="landing-section-head">
-          <p className="eyebrow">Live workspace</p>
-          <h2>What is already on this build</h2>
-          <p className="sub">
-            Numbers refresh from your Mongo sites — demo cache fills the story
-            when the room has no network.
-          </p>
+          <p className="eyebrow">{t('landing.liveEyebrow')}</p>
+          <h2>{t('landing.liveTitle')}</h2>
+          <p className="sub">{t('landing.liveSub')}</p>
         </header>
 
         <div className="landing-metrics">
           <div className="landing-metric">
             <strong>{live.sites}</strong>
-            <span>Saved sites</span>
+            <span>{t('landing.savedSites')}</span>
           </div>
           <div className="landing-metric">
             <strong>{live.scans}</strong>
-            <span>Stored scans</span>
+            <span>{t('landing.storedScans')}</span>
           </div>
           <div className="landing-metric">
             <strong>
               {live.latestNdvi != null ? live.latestNdvi.toFixed(3) : '—'}
             </strong>
             <span>
-              Latest mean NDVI
+              {t('landing.latestNdvi')}
               {live.latestDate ? ` · ${live.latestDate}` : ''}
             </span>
           </div>
           <div className="landing-metric">
             <strong>10 m</strong>
-            <span>Sentinel-2 resolution</span>
+            <span>{t('landing.resolution')}</span>
           </div>
         </div>
       </section>
 
       <section className="landing-section landing-compare">
         <header className="landing-section-head">
-          <p className="eyebrow">Demo scene pair</p>
-          <h2>Kizuna field · 8 → 15 Nov 2026</h2>
+          <p className="eyebrow">{t('landing.demoEyebrow')}</p>
+          <h2>{t('landing.demoTitle')}</h2>
           <p className="sub">
-            Pre-cached {DEMO.sensor} · cloud {DEMO.cloudBefore}% →{' '}
-            {DEMO.cloudAfter}% · Δ mean NDVI {DEMO.delta.toFixed(3)} (below
-            inspect threshold 0.08).
+            {t('landing.demoSub', {
+              sensor: DEMO.sensor,
+              cloudBefore: DEMO.cloudBefore,
+              cloudAfter: DEMO.cloudAfter,
+              delta: DEMO.delta.toFixed(3),
+            })}
           </p>
         </header>
 
@@ -131,7 +130,7 @@ export default function Landing() {
           <figure className="landing-frame">
             <img
               src="/landing/ndvi-older.png"
-              alt="NDVI overlay for 8 November 2026"
+              alt={`NDVI ${DEMO.dates[0]}`}
             />
             <figcaption>
               <span>{DEMO.dates[0]}</span>
@@ -141,7 +140,7 @@ export default function Landing() {
           <figure className="landing-frame">
             <img
               src="/landing/ndvi-latest.png"
-              alt="NDVI overlay for 15 November 2026"
+              alt={`NDVI ${DEMO.dates[2]}`}
             />
             <figcaption>
               <span>{DEMO.dates[2]}</span>
@@ -152,21 +151,19 @@ export default function Landing() {
 
         <div className="landing-facts">
           <p>
-            <strong>Pipeline</strong> Site boundary → cloud-filtered scene →
-            NDVI stats → date compare → report
+            <strong>{t('landing.pipeline')}</strong> {t('landing.pipelineText')}
           </p>
           <p>
-            <strong>Honesty</strong> Enhancement is visual only. NDVI comes from
-            original bands. Inspect flags are rule-based, not a diagnosis.
+            <strong>{t('landing.honesty')}</strong> {t('landing.honestyText')}
           </p>
         </div>
 
         <div className="landing-cta">
           <Link className="primary inline" to="/sites">
-            Draw a site
+            {t('landing.drawSite')}
           </Link>
           <Link className="ghost inline" to="/dashboard">
-            Load demo from dashboard
+            {t('landing.loadDemo')}
           </Link>
         </div>
       </section>

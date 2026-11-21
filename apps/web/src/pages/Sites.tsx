@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, type Site } from '../api';
 import FieldMap from '../components/FieldMap';
+import { useLanguage } from '../i18n';
 
 export default function Sites() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [sites, setSites] = useState<Site[]>([]);
   const [siteName, setSiteName] = useState('');
@@ -14,9 +16,7 @@ export default function Sites() {
   const [draftBoundary, setDraftBoundary] = useState<Site['boundary'] | null>(
     null,
   );
-  const [status, setStatus] = useState(
-    'Draw a field on the map, name it, then save.',
-  );
+  const [status, setStatus] = useState('');
   const [statusKind, setStatusKind] = useState<'ok' | 'busy' | 'error' | ''>(
     '',
   );
@@ -27,11 +27,15 @@ export default function Sites() {
   }, []);
 
   useEffect(() => {
+    setStatus(t('sites.drawHint'));
+  }, [t]);
+
+  useEffect(() => {
     refresh().catch(() => {
-      setStatus('Could not load sites — is the API running?');
+      setStatus(t('sites.loadError'));
       setStatusKind('error');
     });
-  }, [refresh]);
+  }, [refresh, t]);
 
   function onBoundaryChange(feature: GeoJSON.Feature | null) {
     if (!feature || feature.geometry.type !== 'Polygon') {
@@ -40,24 +44,22 @@ export default function Sites() {
     }
     setDraftBoundary(feature.geometry as Site['boundary']);
     setStatus(
-      editing
-        ? 'Boundary ready — save your changes.'
-        : 'Field ready — add a name and save.',
+      editing ? t('sites.boundaryReadyEdit') : t('sites.boundaryReadyNew'),
     );
     setStatusKind('ok');
   }
 
   async function saveNew() {
     if (!draftBoundary) {
-      setStatus('Draw a polygon or rectangle first.');
+      setStatus(t('sites.drawFirst'));
       setStatusKind('error');
       return;
     }
     try {
       setStatusKind('busy');
-      setStatus('Saving…');
+      setStatus(t('sites.saving'));
       const created = await api.createSite({
-        name: siteName.trim() || 'Untitled field',
+        name: siteName.trim() || t('sites.untitled'),
         boundary: draftBoundary,
         plantType: plantType || undefined,
         plantAge: plantAge || undefined,
@@ -70,23 +72,23 @@ export default function Sites() {
       setPlantAge(created.plantAge || '');
       setSoilType(created.soilType || '');
       await refresh();
-      setStatus(`Saved “${created.name}”.`);
+      setStatus(t('sites.saved', { name: created.name }));
       setStatusKind('ok');
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : 'Save failed');
+      setStatus(err instanceof Error ? err.message : t('sites.saveFailed'));
       setStatusKind('error');
     }
   }
 
   async function updateExisting() {
     if (!editing || !draftBoundary) {
-      setStatus('Nothing to update.');
+      setStatus(t('sites.nothingUpdate'));
       setStatusKind('error');
       return;
     }
     try {
       setStatusKind('busy');
-      setStatus('Updating…');
+      setStatus(t('sites.updating'));
       const updated = await api.updateSite(editing._id, {
         name: siteName.trim() || editing.name,
         boundary: draftBoundary,
@@ -101,16 +103,16 @@ export default function Sites() {
       setPlantAge(updated.plantAge || '');
       setSoilType(updated.soilType || '');
       await refresh();
-      setStatus(`Updated “${updated.name}”.`);
+      setStatus(t('sites.updated', { name: updated.name }));
       setStatusKind('ok');
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : 'Update failed');
+      setStatus(err instanceof Error ? err.message : t('sites.updateFailed'));
       setStatusKind('error');
     }
   }
 
   async function removeSite(site: Site) {
-    if (!window.confirm(`Delete “${site.name}” and its scans?`)) return;
+    if (!window.confirm(t('sites.confirmDelete', { name: site.name }))) return;
     try {
       setStatusKind('busy');
       await api.deleteSite(site._id);
@@ -123,10 +125,10 @@ export default function Sites() {
         setSoilType('');
       }
       await refresh();
-      setStatus(`Deleted “${site.name}”.`);
+      setStatus(t('sites.deleted', { name: site.name }));
       setStatusKind('ok');
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : 'Delete failed');
+      setStatus(err instanceof Error ? err.message : t('sites.deleteFailed'));
       setStatusKind('error');
     }
   }
@@ -138,7 +140,7 @@ export default function Sites() {
     setPlantType('');
     setPlantAge('');
     setSoilType('');
-    setStatus('Draw a new field on the map.');
+    setStatus(t('sites.drawNew'));
     setStatusKind('');
   }
 
@@ -149,7 +151,7 @@ export default function Sites() {
     setPlantType(site.plantType || '');
     setPlantAge(site.plantAge || '');
     setSoilType(site.soilType || '');
-    setStatus(`Editing “${site.name}”.`);
+    setStatus(t('sites.editing', { name: site.name }));
     setStatusKind('ok');
   }
 
@@ -157,74 +159,69 @@ export default function Sites() {
     <div className="layout">
       <aside className="sidebar">
         <header className="sidebar-hero">
-          <p className="eyebrow">Farmer workspace</p>
-          <h1>Your sites</h1>
-          <p className="sub">
-            Draw a field boundary, save it, then open Analysis to scan NDVI.
-          </p>
+          <p className="eyebrow">{t('sites.eyebrow')}</p>
+          <h1>{t('sites.title')}</h1>
+          <p className="sub">{t('sites.sub')}</p>
         </header>
 
         <div className={`status-banner ${statusKind || 'idle'}`}>{status}</div>
 
         <section className="panel composer">
           <div className="panel-head">
-            <h2>{editing ? 'Edit site' : 'New site'}</h2>
+            <h2>{editing ? t('sites.edit') : t('sites.new')}</h2>
             {editing && (
               <button className="text-btn" type="button" onClick={startNew}>
-                Clear
+                {t('sites.clear')}
               </button>
             )}
           </div>
           <label className="field">
-            <span>Name</span>
+            <span>{t('sites.name')}</span>
             <input
               value={siteName}
               onChange={(e) => setSiteName(e.target.value)}
-              placeholder="e.g. North plot"
+              placeholder={t('sites.namePh')}
             />
           </label>
           <label className="field">
-            <span>Type plante</span>
+            <span>{t('sites.plantType')}</span>
             <select
               value={plantType}
               onChange={(e) => setPlantType(e.target.value)}
             >
-              <option value="">Select…</option>
-              <option value="olivier">Olivier</option>
-              <option value="ble">Blé</option>
-              <option value="tomate">Tomate</option>
-              <option value="agrumes">Agrumes</option>
-              <option value="autre">Autre</option>
+              <option value="">{t('sites.select')}</option>
+              <option value="olivier">{t('sites.plant.olivier')}</option>
+              <option value="ble">{t('sites.plant.ble')}</option>
+              <option value="tomate">{t('sites.plant.tomate')}</option>
+              <option value="agrumes">{t('sites.plant.agrumes')}</option>
+              <option value="autre">{t('sites.plant.autre')}</option>
             </select>
           </label>
           <label className="field">
-            <span>Âge plante</span>
+            <span>{t('sites.plantAge')}</span>
             <select
               value={plantAge}
               onChange={(e) => setPlantAge(e.target.value)}
             >
-              <option value="">Select…</option>
-              <option value="jeune">Jeune</option>
-              <option value="vegetatif">Végétatif</option>
-              <option value="mature">Mature</option>
+              <option value="">{t('sites.select')}</option>
+              <option value="jeune">{t('sites.age.jeune')}</option>
+              <option value="vegetatif">{t('sites.age.vegetatif')}</option>
+              <option value="mature">{t('sites.age.mature')}</option>
             </select>
           </label>
           <label className="field">
-            <span>Type terre</span>
+            <span>{t('sites.soilType')}</span>
             <select
               value={soilType}
               onChange={(e) => setSoilType(e.target.value)}
             >
-              <option value="">Select…</option>
-              <option value="sableux">Sableux</option>
-              <option value="limoneux">Limoneux</option>
-              <option value="argileux">Argileux</option>
+              <option value="">{t('sites.select')}</option>
+              <option value="sableux">{t('sites.soil.sableux')}</option>
+              <option value="limoneux">{t('sites.soil.limoneux')}</option>
+              <option value="argileux">{t('sites.soil.argileux')}</option>
             </select>
           </label>
-          <p className="hint tight">
-            Crop profile feeds the irrigation advisor. Map: rectangle = drag ·
-            polygon = click corners.
-          </p>
+          <p className="hint tight">{t('sites.hint')}</p>
           <div className="actions stack">
             {editing ? (
               <>
@@ -234,14 +231,14 @@ export default function Sites() {
                   disabled={!draftBoundary}
                   onClick={updateExisting}
                 >
-                  Save changes
+                  {t('sites.saveChanges')}
                 </button>
                 <button
                   className="primary soft"
                   type="button"
                   onClick={() => navigate(`/analysis/${editing._id}`)}
                 >
-                  Open analysis →
+                  {t('sites.openAnalysis')}
                 </button>
               </>
             ) : (
@@ -251,12 +248,12 @@ export default function Sites() {
                 disabled={!draftBoundary}
                 onClick={saveNew}
               >
-                Save site
+                {t('sites.saveSite')}
               </button>
             )}
             {!editing && (
               <button className="ghost" type="button" onClick={startNew}>
-                Reset drawing
+                {t('sites.reset')}
               </button>
             )}
           </div>
@@ -264,7 +261,7 @@ export default function Sites() {
 
         <section className="panel grow">
           <div className="panel-head">
-            <h2>Saved ({sites.length})</h2>
+            <h2>{t('sites.savedCount', { count: sites.length })}</h2>
             <button
               className="text-btn"
               type="button"
@@ -275,19 +272,19 @@ export default function Sites() {
                   )) as { siteId: string };
                   navigate(`/analysis/${demo.siteId}`);
                 } catch {
-                  setStatus('Demo cache missing.');
+                  setStatus(t('sites.demoMissing'));
                   setStatusKind('error');
                 }
               }}
             >
-              Demo
+              {t('sites.demo')}
             </button>
           </div>
 
           {sites.length === 0 ? (
             <div className="empty-block">
-              <p>No sites yet</p>
-              <span>Use the map tools on the right to draw your first field.</span>
+              <p>{t('sites.emptyTitle')}</p>
+              <span>{t('sites.emptyHint')}</span>
             </div>
           ) : (
             <ul className="site-list">
@@ -303,10 +300,10 @@ export default function Sites() {
                       <strong>{s.name}</strong>
                       <span>
                         {active
-                          ? 'Editing now'
+                          ? t('sites.editingNow')
                           : s.plantType && s.plantAge && s.soilType
                             ? `${s.plantType} · ${s.plantAge} · ${s.soilType}`
-                            : 'Crop profile incomplete'}
+                            : t('dash.cropIncomplete')}
                       </span>
                     </button>
                     <div className="site-actions">
@@ -315,14 +312,14 @@ export default function Sites() {
                         className="ghost compact"
                         onClick={() => navigate(`/analysis/${s._id}`)}
                       >
-                        Analyse
+                        {t('sites.analyse')}
                       </button>
                       <button
                         type="button"
                         className="ghost compact danger"
                         onClick={() => removeSite(s)}
                       >
-                        Delete
+                        {t('sites.delete')}
                       </button>
                     </div>
                   </li>

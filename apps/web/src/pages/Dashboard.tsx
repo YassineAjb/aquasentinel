@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, type Site, type WeatherDay } from '../api';
 import SiteMiniMap from '../components/SiteMiniMap';
+import { useLanguage } from '../i18n';
 
 type SiteCard = Site & {
   scanCount?: number;
@@ -11,9 +12,10 @@ type SiteCard = Site & {
 };
 
 export default function Dashboard() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [sites, setSites] = useState<SiteCard[]>([]);
-  const [status, setStatus] = useState('Loading overview…');
+  const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(true);
 
   useEffect(() => {
@@ -21,6 +23,7 @@ export default function Dashboard() {
     (async () => {
       try {
         setBusy(true);
+        setStatus(t('dash.loading'));
         const list = await api.listSites();
         const enriched = await Promise.all(
           list.map(async (s) => {
@@ -54,12 +57,12 @@ export default function Dashboard() {
         setSites(enriched);
         setStatus(
           enriched.length
-            ? `${enriched.length} site${enriched.length === 1 ? '' : 's'} ready`
-            : 'No sites yet — draw one on Sites.',
+            ? t('dash.sitesReady', { count: enriched.length })
+            : t('dash.noSites'),
         );
       } catch (err) {
         if (!cancelled) {
-          setStatus(err instanceof Error ? err.message : 'Failed to load');
+          setStatus(err instanceof Error ? err.message : t('dash.failed'));
         }
       } finally {
         if (!cancelled) setBusy(false);
@@ -68,33 +71,33 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const totalScans = sites.reduce((n, s) => n + (s.scanCount || 0), 0);
 
   return (
     <div className="dash-page">
       <header className="dash-hero">
-        <p className="eyebrow">Dashboard</p>
-        <h1>Field overview</h1>
+        <p className="eyebrow">{t('dash.eyebrow')}</p>
+        <h1>{t('dash.title')}</h1>
         <p className="sub">{status}</p>
       </header>
 
       <div className="dash-stats">
         <div className="dash-stat">
           <strong>{busy ? '—' : sites.length}</strong>
-          <span>Sites</span>
+          <span>{t('dash.sites')}</span>
         </div>
         <div className="dash-stat">
           <strong>{busy ? '—' : totalScans}</strong>
-          <span>Scans</span>
+          <span>{t('dash.scans')}</span>
         </div>
         <div className="dash-actions">
           <Link className="primary inline" to="/sites">
-            Manage sites
+            {t('dash.manageSites')}
           </Link>
           <Link className="ghost inline" to="/analysis">
-            Open analysis
+            {t('dash.openAnalysis')}
           </Link>
           <button
             className="ghost"
@@ -106,22 +109,22 @@ export default function Dashboard() {
                 )) as { siteId: string };
                 navigate(`/analysis/${demo.siteId}`);
               } catch {
-                setStatus('Demo cache missing.');
+                setStatus(t('dash.demoMissing'));
               }
             }}
           >
-            Load demo
+            {t('dash.loadDemo')}
           </button>
         </div>
       </div>
 
       {busy ? (
-        <div className="picker-loading">Loading fields…</div>
+        <div className="picker-loading">{t('dash.loadingFields')}</div>
       ) : sites.length === 0 ? (
         <div className="picker-empty">
-          <p>No sites saved yet.</p>
+          <p>{t('dash.noSitesYet')}</p>
           <Link className="primary inline" to="/sites">
-            Go to Sites
+            {t('dash.goSites')}
           </Link>
         </div>
       ) : (
@@ -139,17 +142,17 @@ export default function Dashboard() {
               <div className="site-card-body">
                 <div className="site-card-top">
                   <strong>{s.name}</strong>
-                  <span className="site-card-cta">Analyse →</span>
+                  <span className="site-card-cta">{t('dash.analyse')}</span>
                 </div>
                 <div className="site-card-meta">
                   <span>
                     {s.scanCount
-                      ? `${s.scanCount} scan${s.scanCount === 1 ? '' : 's'}`
-                      : 'No scans yet'}
+                      ? t('dash.scan', { count: s.scanCount })
+                      : t('dash.noScans')}
                   </span>
                   {s.latestDate && (
                     <span>
-                      Latest {s.latestDate}
+                      {t('dash.latest', { date: s.latestDate })}
                       {s.latestNdvi != null
                         ? ` · NDVI ${s.latestNdvi.toFixed(3)}`
                         : ''}
@@ -157,7 +160,7 @@ export default function Dashboard() {
                   )}
                   {s.weatherDay && (
                     <span>
-                      Rain{' '}
+                      {t('dash.rain')}{' '}
                       {s.weatherDay.precipMm != null
                         ? `${s.weatherDay.precipMm.toFixed(1)} mm`
                         : '—'}
@@ -169,7 +172,7 @@ export default function Dashboard() {
                   <span>
                     {s.plantType && s.plantAge && s.soilType
                       ? `${s.plantType} · ${s.plantAge} · ${s.soilType}`
-                      : 'Crop profile incomplete'}
+                      : t('dash.cropIncomplete')}
                   </span>
                 </div>
               </div>

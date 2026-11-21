@@ -168,6 +168,58 @@
   padding: 0.65rem 0.35rem;
 }
 
+.app-lang {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.app-lang-btn {
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+.app-lang-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.app-lang-btn.is-active {
+  color: #dff5e4;
+  border-color: rgba(47, 158, 68, 0.4);
+  background: rgba(47, 158, 68, 0.14);
+}
+
+.app-shell.nav-collapsed .app-lang-btn {
+  text-align: center;
+  padding-inline: 0.2rem;
+  font-size: 0.72rem;
+}
+
+html[dir='rtl'] .app-nav {
+  border-right: 0;
+  border-left: 1px solid var(--line);
+}
+
+html[dir='rtl'] .app-nav-brand {
+  text-align: right;
+}
+
+html[dir='rtl'] .app-shell {
+  flex-direction: row-reverse;
+}
+
 .app-shell.nav-collapsed .app-nav-label {
   position: absolute;
   width: 1px;
@@ -1307,7 +1359,7 @@ h2 {
 
 }
 
-/* ââ RainCatch (map-first) ââ */
+/* Ã¢ÂÂÃ¢ÂÂ RainCatch (map-first) Ã¢ÂÂÃ¢ÂÂ */
 .rc-stage {
   position: relative;
   flex: 1;
@@ -1846,7 +1898,7 @@ h2 {
   }
 }
 
-/* ââ CutSheetRX webview ââ */
+/* Ã¢ÂÂÃ¢ÂÂ CutSheetRX webview Ã¢ÂÂÃ¢ÂÂ */
 .csrx-stage {
   flex: 1;
   min-height: 0;
@@ -1871,7 +1923,7 @@ h2 {
   background: #111;
 }
 
-/* Host logo/title cover — flush with their left drawer */
+/* Host logo/title cover â flush with their left drawer */
 .csrx-brand-cover {
   position: absolute;
   top: 0;
@@ -2001,7 +2053,7 @@ h2 {
   }
 }
 
-/* —— Field assistant (centered liquid glass) —— */
+/* ââ Field assistant (centered liquid glass) ââ */
 .assistant-fab {
   position: fixed;
   right: 1.15rem;

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { ExternalLink, RefreshCw } from 'lucide-react';
+import { useLanguage } from '../i18n';
 
 export const CUTSHEETRX_URL = 'https://www.senterfarms.com/programs/csrx/';
 
 export default function CutSheetRX() {
+  const { t } = useLanguage();
   const [key, setKey] = useState(0);
   const [blocked, setBlocked] = useState(false);
 
@@ -30,29 +32,29 @@ export default function CutSheetRX() {
             <div className="csrx-brand-cover" aria-hidden>
               <div className="csrx-brand-cover-inner">
                 <span className="csrx-brand-cover-mark">AquaSentinel</span>
-                <span className="csrx-brand-cover-tag">Terrain · LiDAR</span>
+                <span className="csrx-brand-cover-tag">{t('csrx.tag')}</span>
               </div>
             </div>
 
-            <div className="csrx-dock" role="toolbar" aria-label="Embed controls">
+            <div className="csrx-dock" role="toolbar" aria-label={t('csrx.controls')}>
               <button
                 type="button"
                 className="csrx-dock-btn"
                 onClick={reload}
-                title="Reload"
+                title={t('csrx.reload')}
               >
                 <RefreshCw size={15} strokeWidth={2} aria-hidden />
-                <span>Reload</span>
+                <span>{t('csrx.reload')}</span>
               </button>
               <a
                 className="csrx-dock-btn csrx-dock-btn-primary"
                 href={CUTSHEETRX_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                title="Open in new tab"
+                title={t('csrx.open')}
               >
                 <ExternalLink size={15} strokeWidth={2} aria-hidden />
-                <span>Open</span>
+                <span>{t('csrx.open')}</span>
               </a>
             </div>
           </>

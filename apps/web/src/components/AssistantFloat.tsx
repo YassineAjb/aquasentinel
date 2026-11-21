@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MessageCircle, Sparkles, X } from 'lucide-react';
+import { useLanguage } from '../i18n';
 import AssistantPanel from './AssistantPanel';
 
 const API_URL =
@@ -13,6 +14,7 @@ type ReportItem = {
 };
 
 export default function AssistantFloat() {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -36,7 +38,7 @@ export default function AssistantFloat() {
         const normalized: ReportItem[] = list
           .map((r: { _id?: string; id?: string; title?: string; dateA?: string; dateB?: string }) => ({
             _id: String(r._id || r.id || ''),
-            title: r.title || 'Report',
+            title: r.title || t('assistant.report'),
             dateA: r.dateA,
             dateB: r.dateB,
           }))
@@ -54,7 +56,7 @@ export default function AssistantFloat() {
     return () => {
       cancelled = true;
     };
-  }, [open]);
+  }, [open, t]);
 
   useEffect(() => {
     if (!open) return;
@@ -77,8 +79,8 @@ export default function AssistantFloat() {
           type="button"
           className="assistant-fab"
           onClick={() => setOpen(true)}
-          aria-label="Open field assistant"
-          title="Field assistant"
+          aria-label={t('assistant.open')}
+          title={t('assistant.title')}
         >
           <MessageCircle size={22} strokeWidth={2} aria-hidden />
         </button>
@@ -89,14 +91,14 @@ export default function AssistantFloat() {
           <button
             type="button"
             className="assistant-backdrop"
-            aria-label="Close assistant"
+            aria-label={t('assistant.close')}
             onClick={() => setOpen(false)}
           />
           <div
             className="assistant-modal"
             role="dialog"
             aria-modal="true"
-            aria-label="Field assistant"
+            aria-label={t('assistant.title')}
           >
             <div className="assistant-modal-glow" aria-hidden />
             <header className="assistant-modal-head">
@@ -106,13 +108,13 @@ export default function AssistantFloat() {
                 </span>
                 <div>
                   <p className="eyebrow">AquaSentinel</p>
-                  <h2>Field assistant</h2>
+                  <h2>{t('assistant.title')}</h2>
                 </div>
               </div>
               <button
                 type="button"
                 className="assistant-close"
-                aria-label="Close"
+                aria-label={t('assistant.close')}
                 onClick={() => setOpen(false)}
               >
                 <X size={18} strokeWidth={2} aria-hidden />
@@ -120,14 +122,11 @@ export default function AssistantFloat() {
             </header>
             <div className="assistant-modal-body">
               {loading ? (
-                <p className="hint">Loading saved reports…</p>
+                <p className="hint">{t('assistant.loading')}</p>
               ) : error ? (
-                <p className="hint">Couldn’t load reports: {error}</p>
+                <p className="hint">{t('assistant.loadError', { error })}</p>
               ) : reports.length === 0 ? (
-                <p className="hint">
-                  No saved reports yet. On Analysis, compare two dates and save a
-                  report, then reopen the assistant.
-                </p>
+                <p className="hint">{t('assistant.empty')}</p>
               ) : (
                 <AssistantPanel reports={reports} />
               )}

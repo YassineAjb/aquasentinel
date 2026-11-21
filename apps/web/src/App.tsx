@@ -1,7 +1,6 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import {
   ChartSpline,
-  Droplets,
   Home,
   LayoutDashboard,
   MapPinned,
@@ -12,12 +11,12 @@ import {
 } from 'lucide-react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 import AssistantFloat from './components/AssistantFloat';
+import { LOCALES, useLanguage, type Locale } from './i18n';
 import Analysis from './pages/Analysis';
 import AnalysisPicker from './pages/AnalysisPicker';
 import CutSheetRX from './pages/CutSheetRX';
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
-import RainCatch from './pages/RainCatch';
 import Sites from './pages/Sites';
 import WaterGuard from './pages/WaterGuard';
 import './App.css';
@@ -26,22 +25,22 @@ type NavIcon = ComponentType<LucideProps>;
 
 const NAV: {
   to: string;
-  label: string;
+  labelKey: string;
   end?: boolean;
   Icon: NavIcon;
 }[] = [
-  { to: '/', label: 'Home', end: true, Icon: Home },
-  { to: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
-  { to: '/sites', label: 'Sites', Icon: MapPinned },
-  { to: '/analysis', label: 'Analysis', Icon: ChartSpline },
-  { to: '/waterguard', label: 'WaterGuard', Icon: ShieldAlert },
-  { to: '/raincatch', label: 'RainCatch', Icon: Droplets },
-  { to: '/cutsheetrx', label: 'CutSheetRX', Icon: Mountain },
+  { to: '/', labelKey: 'nav.home', end: true, Icon: Home },
+  { to: '/dashboard', labelKey: 'nav.dashboard', Icon: LayoutDashboard },
+  { to: '/sites', labelKey: 'nav.sites', Icon: MapPinned },
+  { to: '/analysis', labelKey: 'nav.analysis', Icon: ChartSpline },
+  { to: '/waterguard', labelKey: 'nav.waterguard', Icon: ShieldAlert },
+  { to: '/cutsheetrx', labelKey: 'nav.cutsheetrx', Icon: Mountain },
 ];
 
 const STORAGE_KEY = 'aquasentinel-nav-collapsed';
 
 export default function App() {
+  const { t, locale, setLocale } = useLanguage();
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(STORAGE_KEY) === '1';
@@ -60,7 +59,7 @@ export default function App() {
 
   return (
     <div className={`app-shell${collapsed ? ' nav-collapsed' : ''}`}>
-      <aside className="app-nav" aria-label="Main">
+      <aside className="app-nav" aria-label={t('nav.main')}>
         <div className="app-nav-top">
           <button
             type="button"
@@ -68,8 +67,8 @@ export default function App() {
             onClick={() => {
               if (collapsed) setCollapsed(false);
             }}
-            aria-label={collapsed ? 'Expand sidebar' : 'AquaSentinel'}
-            title={collapsed ? 'Expand sidebar' : undefined}
+            aria-label={collapsed ? t('nav.expand') : 'AquaSentinel'}
+            title={collapsed ? t('nav.expand') : undefined}
           >
             {collapsed ? (
               <img
@@ -82,7 +81,7 @@ export default function App() {
             ) : (
               <span className="brand-copy">
                 <span className="brand-mark">AquaSentinel</span>
-                <span className="brand-tag">Water · energy · food</span>
+                <span className="brand-tag">{t('brand.tag')}</span>
               </span>
             )}
           </button>
@@ -91,8 +90,8 @@ export default function App() {
               type="button"
               className="app-nav-toggle"
               aria-expanded
-              aria-label="Collapse sidebar"
-              title="Collapse"
+              aria-label={t('nav.collapse')}
+              title={t('nav.collapse')}
               onClick={() => setCollapsed(true)}
             >
               <PanelLeftClose size={16} strokeWidth={2} aria-hidden />
@@ -100,19 +99,36 @@ export default function App() {
           )}
         </div>
         <nav>
-          {NAV.map(({ to, label, end, Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className="app-nav-link"
-              title={label}
-            >
-              <Icon className="app-nav-icon" size={18} strokeWidth={2} aria-hidden />
-              <span className="app-nav-label">{label}</span>
-            </NavLink>
-          ))}
+          {NAV.map(({ to, labelKey, end, Icon }) => {
+            const label = t(labelKey);
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className="app-nav-link"
+                title={label}
+              >
+                <Icon className="app-nav-icon" size={18} strokeWidth={2} aria-hidden />
+                <span className="app-nav-label">{label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
+        <div className="app-lang" role="group" aria-label={t('nav.language')}>
+          {LOCALES.map((l) => (
+            <button
+              key={l.id}
+              type="button"
+              className={`app-lang-btn${locale === l.id ? ' is-active' : ''}`}
+              aria-pressed={locale === l.id}
+              title={l.label}
+              onClick={() => setLocale(l.id as Locale)}
+            >
+              {collapsed ? l.native : l.label}
+            </button>
+          ))}
+        </div>
       </aside>
       <div className="app-main">
         <Routes>
@@ -122,7 +138,6 @@ export default function App() {
           <Route path="/analysis" element={<AnalysisPicker />} />
           <Route path="/analysis/:siteId" element={<Analysis />} />
           <Route path="/waterguard" element={<WaterGuard />} />
-          <Route path="/raincatch" element={<RainCatch />} />
           <Route path="/cutsheetrx" element={<CutSheetRX />} />
         </Routes>
         <AssistantFloat />

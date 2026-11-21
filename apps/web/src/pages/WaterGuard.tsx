@@ -17,13 +17,20 @@ import {
   type WaterGuardLive,
   type WaterMeasurement,
 } from '../api';
+import { useLanguage } from '../i18n';
 import './WaterGuard.css';
 
 
-const STATUS_LABEL: Record<string, string> = { NORMAL: 'Normal', WARNING: 'Anomaly detected', LEAK: 'Leak suspected', OFF: 'Stopped' };
 function fmt(value: number) { return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 1 }); }
 
 export default function WaterGuard() {
+  const { t } = useLanguage();
+  const STATUS_LABEL: Record<string, string> = {
+    NORMAL: t('wg.status.NORMAL'),
+    WARNING: t('wg.status.WARNING'),
+    LEAK: t('wg.status.LEAK'),
+    OFF: t('wg.status.OFF'),
+  };
   const [sites, setSites] = useState<Site[]>([]);
   const [siteId, setSiteId] = useState('');
   const [live, setLive] = useState<WaterGuardLive | null>(null);
@@ -31,8 +38,9 @@ export default function WaterGuard() {
   const [alerts, setAlerts] = useState<WaterAlert[]>([]);
   const [expectedFlow, setExpectedFlow] = useState(18);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState('Choose a field to begin.');
+  const [message, setMessage] = useState('');
 
+  useEffect(() => { setMessage(t('wg.choose')); }, [t]);
   useEffect(() => { api.listSites().then((list) => { setSites(list); if (list[0]) setSiteId(list[0]._id); }).catch((e) => setMessage(e.message)); }, []);
 
   const refresh = useCallback(async (id: string) => {
@@ -57,7 +65,7 @@ export default function WaterGuard() {
   async function perform(action: () => Promise<unknown>, success: string) {
     setBusy(true);
     try { await action(); await refresh(siteId); setMessage(success); }
-    catch (error) { setMessage(error instanceof Error ? error.message : 'Action failed'); }
+    catch (error) { setMessage(error instanceof Error ? error.message : t('wg.failed')); }
     finally { setBusy(false); }
   }
 

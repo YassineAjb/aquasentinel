@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUp, AudioLines, Square } from 'lucide-react';
+import { useLanguage } from '../i18n';
 
 type SpeechRec = {
   lang: string;
@@ -82,8 +83,9 @@ export default function AssistantPanel({
   reports: ReportItem[];
   activeReportId?: string | null;
 }) {
+  const { t, assistantLang } = useLanguage();
   const [reportId, setReportId] = useState('');
-  const [lang, setLang] = useState('fr');
+  const [lang, setLang] = useState(assistantLang);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -93,6 +95,10 @@ export default function AssistantPanel({
   const abortRef = useRef<AbortController | null>(null);
   const recognitionRef = useRef<SpeechRec | null>(null);
   const askRef = useRef<(q: string) => void>(() => {});
+
+  useEffect(() => {
+    setLang(assistantLang);
+  }, [assistantLang]);
 
   useEffect(() => {
     if (activeReportId) setReportId(activeReportId);
@@ -124,7 +130,7 @@ export default function AssistantPanel({
   function startListening() {
     const Ctor = getSpeechRecognition();
     if (!Ctor) {
-      setVoiceHint('Voice input needs Chrome or Edge.');
+      setVoiceHint(t('assistant.voiceUnsupported'));
       return;
     }
     if (!reportId || busy) return;
@@ -159,9 +165,9 @@ export default function AssistantPanel({
       setListening(false);
       recognitionRef.current = null;
       if (ev.error === 'not-allowed') {
-        setVoiceHint('Microphone permission denied.');
+        setVoiceHint(t('assistant.micDenied'));
       } else if (ev.error !== 'aborted' && ev.error !== 'no-speech') {
-        setVoiceHint('Couldn’t hear that — try again.');
+        setVoiceHint(t('assistant.voiceRetry'));
       }
     };
 
@@ -175,7 +181,7 @@ export default function AssistantPanel({
       setListening(true);
     } catch {
       setListening(false);
-      setVoiceHint('Couldn’t start the microphone.');
+      setVoiceHint(t('assistant.micFail'));
     }
   }
 
@@ -333,7 +339,7 @@ export default function AssistantPanel({
     <section className="panel assistant-chat">
       <div className="assistant-controls">
         <label className="field">
-          <span>Report</span>
+          <span>{t('assistant.report')}</span>
           <select value={reportId} onChange={(e) => setReportId(e.target.value)}>
             {reports.map((r) => (
               <option key={r._id} value={r._id}>
@@ -344,11 +350,10 @@ export default function AssistantPanel({
         </label>
 
         <label className="field">
-          <span>Answer language</span>
+          <span>{t('assistant.answerLang')}</span>
           <select value={lang} onChange={(e) => setLang(e.target.value)}>
-            <option value="fr">Français</option>
-            <option value="ar-tn">العربية (تونسي)</option>
             <option value="en">English</option>
+            <option value="ar-tn">العربية</option>
             <option value="ja">日本語</option>
           </select>
         </label>
@@ -370,7 +375,7 @@ export default function AssistantPanel({
 
       <div className="assistant-thread" aria-live="polite">
         {messages.length === 0 && (
-          <p className="hint">Pick a question above or type your own.</p>
+          <p className="hint">{t('assistant.pickQuestion')}</p>
         )}
         {messages.map((m, i) => {
           const isStreamingTail =
@@ -400,7 +405,7 @@ export default function AssistantPanel({
       <div className={`assistant-composer${listening ? ' is-listening' : ''}`}>
         <input
           value={input}
-          placeholder={listening ? 'Listening…' : 'Ask about your field…'}
+          placeholder={listening ? t('assistant.listening') : t('assistant.placeholder')}
           disabled={!reportId || busy}
           onChange={(e) => {
             setInput(e.target.value);
@@ -412,8 +417,8 @@ export default function AssistantPanel({
           <button
             type="button"
             className="assistant-voice-btn is-stop"
-            aria-label="Stop"
-            title="Stop"
+            aria-label={t('assistant.stop')}
+            title={t('assistant.stop')}
             onClick={() => abortRef.current?.abort()}
           >
             <Square size={14} strokeWidth={2.5} fill="currentColor" aria-hidden />
@@ -422,8 +427,8 @@ export default function AssistantPanel({
           <button
             type="button"
             className="assistant-voice-btn is-send"
-            aria-label="Send"
-            title="Send"
+            aria-label={t('assistant.send')}
+            title={t('assistant.send')}
             disabled={!reportId}
             onClick={() => ask(input)}
           >
@@ -433,8 +438,8 @@ export default function AssistantPanel({
           <button
             type="button"
             className="assistant-voice-btn is-listening"
-            aria-label="Stop listening"
-            title="Stop listening"
+            aria-label={t('assistant.stopListen')}
+            title={t('assistant.stopListen')}
             onClick={stopListening}
           >
             <Square size={14} strokeWidth={2.5} fill="currentColor" aria-hidden />
@@ -443,8 +448,8 @@ export default function AssistantPanel({
           <button
             type="button"
             className="assistant-voice-btn"
-            aria-label="Voice input"
-            title="Talk"
+            aria-label={t('assistant.talk')}
+            title={t('assistant.talk')}
             disabled={!reportId}
             onClick={startListening}
           >
@@ -456,11 +461,10 @@ export default function AssistantPanel({
         <p className="hint">{voiceHint}</p>
       ) : (
         <p className="hint">
-          {listening
-            ? 'Speak now — your question will send when you pause.'
-            : 'Type to send, or tap the waveform to talk.'}
+          {listening ? t('assistant.hintListening') : t('assistant.hint')}
         </p>
       )}
+      <p className="hint">{t('assistant.streamHint')}</p>
     </section>
   );
 }

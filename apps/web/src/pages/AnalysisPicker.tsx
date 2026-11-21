@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, type Site } from '../api';
 import SiteMiniMap from '../components/SiteMiniMap';
+import { useLanguage } from '../i18n';
 
 type SiteCard = Site & {
   scanCount?: number;
@@ -10,9 +11,10 @@ type SiteCard = Site & {
 };
 
 export default function AnalysisPicker() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [sites, setSites] = useState<SiteCard[]>([]);
-  const [status, setStatus] = useState('Loading sites…');
+  const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(true);
 
   useEffect(() => {
@@ -20,6 +22,7 @@ export default function AnalysisPicker() {
     (async () => {
       try {
         setBusy(true);
+        setStatus(t('picker.loading'));
         const list = await api.listSites();
         const enriched = await Promise.all(
           list.map(async (s) => {
@@ -40,13 +43,11 @@ export default function AnalysisPicker() {
         if (cancelled) return;
         setSites(enriched);
         setStatus(
-          enriched.length
-            ? 'Select a site to run or review analysis.'
-            : 'No sites yet — create one on the Sites page.',
+          enriched.length ? t('picker.selectHint') : t('picker.noSites'),
         );
       } catch (err) {
         if (!cancelled) {
-          setStatus(err instanceof Error ? err.message : 'Failed to load sites');
+          setStatus(err instanceof Error ? err.message : t('picker.failed'));
         }
       } finally {
         if (!cancelled) setBusy(false);
@@ -55,23 +56,23 @@ export default function AnalysisPicker() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   return (
     <div className="picker-page">
       <header className="picker-hero">
-        <p className="eyebrow">Analysis</p>
-        <h1>Select a site</h1>
+        <p className="eyebrow">{t('picker.eyebrow')}</p>
+        <h1>{t('picker.title')}</h1>
         <p className="sub">{status}</p>
       </header>
 
       {busy ? (
-        <div className="picker-loading">Loading your fields…</div>
+        <div className="picker-loading">{t('picker.loadingFields')}</div>
       ) : sites.length === 0 ? (
         <div className="picker-empty">
-          <p>No sites saved yet.</p>
+          <p>{t('picker.noSitesYet')}</p>
           <Link className="primary inline" to="/sites">
-            Go to Sites
+            {t('picker.goSites')}
           </Link>
         </div>
       ) : (
@@ -89,17 +90,17 @@ export default function AnalysisPicker() {
               <div className="site-card-body">
                 <div className="site-card-top">
                   <strong>{s.name}</strong>
-                  <span className="site-card-cta">Open →</span>
+                  <span className="site-card-cta">{t('picker.open')}</span>
                 </div>
                 <div className="site-card-meta">
                   <span>
                     {s.scanCount
-                      ? `${s.scanCount} scan${s.scanCount === 1 ? '' : 's'}`
-                      : 'No scans yet'}
+                      ? t('dash.scan', { count: s.scanCount })
+                      : t('dash.noScans')}
                   </span>
                   {s.latestDate && (
                     <span>
-                      Latest {s.latestDate}
+                      {t('dash.latest', { date: s.latestDate })}
                       {s.latestNdvi != null
                         ? ` · NDVI ${s.latestNdvi.toFixed(3)}`
                         : ''}
