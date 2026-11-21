@@ -113,15 +113,52 @@ export class SitesController {
     return this.sitesService.compare(id, dto);
   }
 
+  @Get(':id/reports')
+  listReports(@Param('id') id: string) {
+    return this.sitesService.listReports(id);
+  }
+
+  @Get(':id/reports/:reportId')
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  async savedReport(
+    @Param('id') id: string,
+    @Param('reportId') reportId: string,
+    @Query('print') print: string | undefined,
+    @Res() res: Response,
+  ) {
+    const html = await this.sitesService.getSavedReportHtml(id, reportId, {
+      print: print === '1' || print === 'true',
+    });
+    res.send(html);
+  }
+
+  @Post(':id/reports')
+  async saveReport(@Param('id') id: string, @Body() dto: CompareDto) {
+    const saved = await this.sitesService.buildAndSaveReport(
+      id,
+      dto.aId,
+      dto.bId,
+    );
+    return {
+      reportId: saved.reportId,
+      title: saved.title,
+      url: `/sites/${id}/reports/${saved.reportId}`,
+      pdfUrl: `/sites/${id}/reports/${saved.reportId}?print=1`,
+    };
+  }
+
   @Get(':id/report')
   @Header('Content-Type', 'text/html; charset=utf-8')
   async report(
     @Param('id') id: string,
     @Query('a') a: string,
     @Query('b') b: string,
+    @Query('print') print: string | undefined,
     @Res() res: Response,
   ) {
-    const html = await this.sitesService.reportHtml(id, a, b);
+    const html = await this.sitesService.reportHtml(id, a, b, {
+      print: print === '1' || print === 'true',
+    });
     res.send(html);
   }
 }

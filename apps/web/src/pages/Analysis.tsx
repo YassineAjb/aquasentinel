@@ -54,6 +54,17 @@ export default function Analysis() {
   const [irrigation, setIrrigation] = useState<IrrigationPlan | null>(null);
   const [irrigationError, setIrrigationError] = useState('');
   const [irrigationBusy, setIrrigationBusy] = useState(false);
+  const [reports, setReports] = useState<
+    {
+      _id: string;
+      title: string;
+      dateA?: string;
+      dateB?: string;
+      deltaMeanNdvi?: number | null;
+      inspectFlag?: boolean;
+    }[]
+  >([]);
+  const [savedReportId, setSavedReportId] = useState<string | null>(null);
   const [ndvi, setNdvi] = useState<{
     url: string;
     bounds: [[number, number], [number, number]];
@@ -204,6 +215,20 @@ export default function Analysis() {
     }
   }
 
+  async function refreshReports(sid: string) {
+    try {
+      const list = await api.listReports(sid);
+      setReports(list);
+    } catch {
+      /* ignore list errors */
+    }
+  }
+
+  useEffect(() => {
+    if (!siteId) return;
+    void refreshReports(siteId);
+  }, [siteId]);
+
   async function runCompare() {
     if (!site || !compareA || !compareB) return;
     try {
@@ -212,8 +237,12 @@ export default function Analysis() {
       setStatus('Comparing dates…');
       const result = await api.compare(site._id, compareA, compareB);
       setCompareResult(result);
+      setStatus('Saving report to database…');
+      const saved = await api.saveReport(site._id, compareA, compareB);
+      setSavedReportId(saved.reportId);
+      await refreshReports(site._id);
       setStatus(
-        `Compared ${result.a.acquiredAt || 'A'} → ${result.b.acquiredAt || 'B'} · Δ ${result.deltaMeanNdvi ?? '—'}`,
+        `Compared ${result.a.acquiredAt || 'A'} → ${result.b.acquiredAt || 'B'} · report saved`,
       );
       setStatusKind('ok');
     } catch (err) {
@@ -617,17 +646,76 @@ export default function Analysis() {
                   </div>
                 )}
                 {site && (
-                  <a
-                    className="report-link"
-                    href={api.reportUrl(site._id, compareA, compareB)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open HTML report
-                  </a>
+                  <div className="report-actions">
+                    <a
+                      className="report-link"
+                      href={
+                        savedReportId
+                          ? api.savedReportUrl(site._id, savedReportId)
+                          : api.reportUrl(site._id, compareA, compareB)
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open HTML report
+                    </a>
+                    <a
+                      className="report-link pdf"
+                      href={
+                        savedReportId
+                          ? api.savedReportUrl(site._id, savedReportId, true)
+                          : api.reportUrl(site._id, compareA, compareB, true)
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Save PDF
+                    </a>
+                    {savedReportId && (
+                      <span className="hint tight">Saved in Mongo · PDF via print dialog</span>
+                    )}
+                  </div>
                 )}
               </div>
             )}
+          </section>
+        )}
+
+        {reports.length > 0 && (
+          <section className="panel">
+            <div className="panel-head">
+              <h2>Saved reports ({reports.length})</h2>
+            </div>
+            <ul className="history-list">
+              {reports.map((r) => (
+                <li key={r._id}>
+                  <div className="report-row">
+                    <a
+                      className="report-link"
+                      href={api.savedReportUrl(siteId, r._id)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <strong>
+                        {r.dateA || '?'} → {r.dateB || '?'}
+                      </strong>
+                      <span>
+                        Δ {r.deltaMeanNdvi ?? '—'}
+                        {r.inspectFlag ? ' · INSPECT' : ''}
+                      </span>
+                    </a>
+                    <a
+                      className="ghost compact"
+                      href={api.savedReportUrl(siteId, r._id, true)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      PDF
+                    </a>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </section>
         )}
       </aside>

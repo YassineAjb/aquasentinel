@@ -14,6 +14,7 @@ import { IrrigationPlanDto } from './dto/irrigation-plan.dto';
 import { ScanDto } from './dto/scan.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { Observation, ObservationDocument } from './schemas/observation.schema';
+import { Report, ReportDocument } from './schemas/report.schema';
 import { Site, SiteDocument } from './schemas/site.schema';
 
 const NDVI_DROP_FLAG = 0.08;
@@ -25,6 +26,8 @@ export class SitesService {
     @InjectModel(Site.name) private readonly siteModel: Model<SiteDocument>,
     @InjectModel(Observation.name)
     private readonly observationModel: Model<ObservationDocument>,
+    @InjectModel(Report.name)
+    private readonly reportModel: Model<ReportDocument>,
     private readonly scanService: ScanService,
     private readonly weatherService: WeatherService,
     private readonly irrigationService: IrrigationService,
@@ -141,6 +144,7 @@ export class SitesService {
     const site = await this.siteModel.findByIdAndDelete(siteOid).lean();
     if (!site) throw new NotFoundException('Site not found');
     await this.observationModel.deleteMany({ siteId: siteOid });
+    await this.reportModel.deleteMany({ siteId: siteOid });
     await this.weatherService.deleteForSite(id).catch(() => undefined);
     return { ok: true, deletedId: id };
   }
@@ -505,7 +509,93 @@ export class SitesService {
     };
   }
 
-  async reportHtml(siteId: string, aId: string, bId: string) {
+  async listReports(siteId: string) {
+    await this.findOne(siteId);
+    return this.reportModel
+      .find({ siteId: this.oid(siteId, 'site id') })
+      .sort({ updatedAt: -1 })
+      .select('-html')
+      .lean();
+  }
+
+  async getSavedReportHtml(
+    siteId: string,
+    reportId: string,
+    opts: { print?: boolean } = {},
+  ) {
+    await this.findOne(siteId);
+    const report = await this.reportModel
+      .findOne({
+        _id: this.oid(reportId, 'report id'),
+        siteId: this.oid(siteId, 'site id'),
+      })
+      .lean();
+    if (!report) throw new NotFoundException('Report not found');
+    return this.withPrintChrome(report.html, opts.print);
+  }
+
+  /** Farmer can Save as PDF via browser print dialog. */
+  private withPrintChrome(html: string, autoPrint = false) {
+    if (html.includes('data-aquasentinel-print')) {
+      if (autoPrint && !html.includes('data-aquasentinel-autoprint')) {
+        return html.replace(
+          '</body>',
+          `<script data-aquasentinel-autoprint>window.addEventListener('load',()=>setTimeout(()=>window.print(),400));</script></body>`,
+        );
+      }
+      return html;
+    }
+    const chrome = `
+<style data-aquasentinel-print>
+  .print-bar {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; gap: .6rem; align-items: center; flex-wrap: wrap;
+    margin: -2rem -2rem 1.25rem; padding: .85rem 1.1rem;
+    background: #102018; color: #e7f0e8;
+    border-bottom: 1px solid rgba(120,150,128,.35);
+  }
+  .print-bar button, .print-bar .hint {
+    font: inherit;
+  }
+  .print-bar button {
+    background: #2f9e44; color: #fff; border: 0; border-radius: 8px;
+    padding: .55rem .9rem; font-weight: 650; cursor: pointer;
+  }
+  .print-bar .hint { color: #9eb3a3; font-size: .85rem; }
+  @media print {
+    .print-bar { display: none !important; }
+    body { margin: 1rem; }
+    .grid { break-inside: avoid; }
+    .card { break-inside: avoid; }
+  }
+</style>
+<div class="print-bar" data-aquasentinel-print>
+  <button type="button" onclick="window.print()">Save as PDF</button>
+  <span class="hint">Choose “Save as PDF” / “Microsoft Print to PDF” in the print dialog.</span>
+</div>
+${
+  autoPrint
+    ? `<script data-aquasentinel-autoprint>window.addEventListener('load',()=>setTimeout(()=>window.print(),400));</script>`
+    : ''
+}`;
+    if (html.includes('</body>')) {
+      return html.replace('</body>', `${chrome}</body>`);
+    }
+    return `${html}${chrome}`;
+  }
+
+  async reportHtml(
+    siteId: string,
+    aId: string,
+    bId: string,
+    opts: { print?: boolean } = {},
+  ) {
+    const { html } = await this.buildAndSaveReport(siteId, aId, bId);
+    return this.withPrintChrome(html, opts.print);
+  }
+
+  /** Build compare HTML, upsert into Mongo, return html + report id. */
+  async buildAndSaveReport(siteId: string, aId: string, bId: string) {
     const site = await this.findOne(siteId);
     const cmp = await this.compare(siteId, { aId, bId });
     const toDataUrl = async (obsId: string, kind: 'ndvi' | 'truecolor') => {
@@ -530,7 +620,7 @@ export class SitesService {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
 
-    return `<!doctype html>
+    const html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -547,9 +637,18 @@ export class SitesService {
     .warn { color: #a60; }
     .flag { color: #a20; font-weight: 700; }
     footer { margin-top: 1.5rem; font-size: .8rem; color: #678; }
+    @media print {
+      .print-bar { display: none !important; }
+      body { margin: 1rem; }
+      .card { break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
+  <div class="print-bar" data-aquasentinel-print style="position:sticky;top:0;z-index:20;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin:-2rem -2rem 1.25rem;padding:.85rem 1.1rem;background:#102018;color:#e7f0e8;border-bottom:1px solid rgba(120,150,128,.35)">
+    <button type="button" onclick="window.print()" style="background:#2f9e44;color:#fff;border:0;border-radius:8px;padding:.55rem .9rem;font-weight:650;cursor:pointer">Save as PDF</button>
+    <span style="color:#9eb3a3;font-size:.85rem">Choose “Save as PDF” in the print dialog.</span>
+  </div>
   <h1>AquaSentinel monitoring report</h1>
   <p class="sub">${esc(site.name)} · Sentinel-2 via Planetary Computer</p>
   <p class="delta">Δ mean NDVI (later − earlier): ${esc(cmp.deltaMeanNdvi)}
@@ -594,6 +693,36 @@ export class SitesService {
   </footer>
 </body>
 </html>`;
+
+    const title = `${site.name}: ${cmp.a.acquiredAt || 'A'} → ${cmp.b.acquiredAt || 'B'}`;
+    const saved = await this.reportModel
+      .findOneAndUpdate(
+        {
+          siteId: this.oid(siteId, 'site id'),
+          observationAId: this.oid(aId, 'observation A'),
+          observationBId: this.oid(bId, 'observation B'),
+        },
+        {
+          $set: {
+            title,
+            dateA: cmp.a.acquiredAt,
+            dateB: cmp.b.acquiredAt,
+            deltaMeanNdvi: cmp.deltaMeanNdvi,
+            inspectFlag: Boolean(cmp.inspect?.flag),
+            inspectReason: cmp.inspect?.reason,
+            interpretation: cmp.interpretation?.text,
+            html,
+          },
+        },
+        { upsert: true, new: true },
+      )
+      .lean();
+
+    return {
+      html,
+      reportId: String(saved?._id || ''),
+      title,
+    };
   }
 
   private parseCloud(cloud: unknown): number | undefined {

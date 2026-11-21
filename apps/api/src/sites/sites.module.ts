@@ -4,6 +4,7 @@ import { IrrigationModule } from '../irrigation/irrigation.module';
 import { ScanModule } from '../scan/scan.module';
 import { WeatherModule } from '../weather/weather.module';
 import { Observation, ObservationSchema } from './schemas/observation.schema';
+import { Report, ReportSchema } from './schemas/report.schema';
 import { Site, SiteSchema } from './schemas/site.schema';
 import { SitesController } from './sites.controller';
 import { SitesService } from './sites.service';
@@ -13,6 +14,7 @@ import { SitesService } from './sites.service';
     MongooseModule.forFeature([
       { name: Site.name, schema: SiteSchema },
       { name: Observation.name, schema: ObservationSchema },
+      { name: Report.name, schema: ReportSchema },
     ]),
     ScanModule,
     WeatherModule,

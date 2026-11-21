@@ -226,8 +226,35 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ aId, bId }),
     }),
-  reportUrl: (siteId: string, aId: string, bId: string) =>
-    `${API_URL}/sites/${siteId}/report?a=${encodeURIComponent(aId)}&b=${encodeURIComponent(bId)}`,
+  reportUrl: (siteId: string, aId: string, bId: string, print = false) => {
+    const q = new URLSearchParams({ a: aId, b: bId });
+    if (print) q.set('print', '1');
+    return `${API_URL}/sites/${siteId}/report?${q.toString()}`;
+  },
+  savedReportUrl: (siteId: string, reportId: string, print = false) =>
+    `${API_URL}/sites/${siteId}/reports/${reportId}${print ? '?print=1' : ''}`,
+  listReports: (siteId: string) =>
+    request<
+      {
+        _id: string;
+        title: string;
+        dateA?: string;
+        dateB?: string;
+        deltaMeanNdvi?: number | null;
+        inspectFlag?: boolean;
+        updatedAt?: string;
+      }[]
+    >(`/sites/${siteId}/reports`),
+  saveReport: (siteId: string, aId: string, bId: string) =>
+    request<{
+      reportId: string;
+      title: string;
+      url: string;
+      pdfUrl: string;
+    }>(`/sites/${siteId}/reports`, {
+      method: 'POST',
+      body: JSON.stringify({ aId, bId }),
+    }),
   getWeather: (
     siteId: string,
     opts: { from?: string; to?: string; around?: string; refresh?: boolean } = {},

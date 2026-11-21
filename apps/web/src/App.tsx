@@ -5,12 +5,14 @@ import {
   Home,
   LayoutDashboard,
   MapPinned,
+  Mountain,
   PanelLeftClose,
   type LucideProps,
 } from 'lucide-react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 import Analysis from './pages/Analysis';
 import AnalysisPicker from './pages/AnalysisPicker';
+import CutSheetRX from './pages/CutSheetRX';
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import RainCatch from './pages/RainCatch';
@@ -30,6 +32,7 @@ const NAV: {
   { to: '/sites', label: 'Sites', Icon: MapPinned },
   { to: '/analysis', label: 'Analysis', Icon: ChartSpline },
   { to: '/raincatch', label: 'RainCatch', Icon: Droplets },
+  { to: '/cutsheetrx', label: 'CutSheetRX', Icon: Mountain },
 ];
 
 const STORAGE_KEY = 'aquasentinel-nav-collapsed';
@@ -115,6 +118,7 @@ export default function App() {
           <Route path="/analysis" element={<AnalysisPicker />} />
           <Route path="/analysis/:siteId" element={<Analysis />} />
           <Route path="/raincatch" element={<RainCatch />} />
+          <Route path="/cutsheetrx" element={<CutSheetRX />} />
         </Routes>
       </div>
     </div>
