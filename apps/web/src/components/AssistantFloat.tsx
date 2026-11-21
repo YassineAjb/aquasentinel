@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle, Sparkles, X } from 'lucide-react';
 import AssistantPanel from './AssistantPanel';
 
 const API_URL =
@@ -61,8 +61,13 @@ export default function AssistantFloat() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
     };
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
   }, [open]);
 
   return (
@@ -80,18 +85,29 @@ export default function AssistantFloat() {
       )}
 
       {open && (
-        <div className="assistant-layer">
+        <div className="assistant-layer" role="presentation">
           <button
             type="button"
             className="assistant-backdrop"
             aria-label="Close assistant"
             onClick={() => setOpen(false)}
           />
-          <aside className="assistant-sheet" aria-label="Field assistant">
-            <header className="assistant-sheet-head">
-              <div>
-                <p className="eyebrow">AquaSentinel</p>
-                <h2>Field assistant</h2>
+          <div
+            className="assistant-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Field assistant"
+          >
+            <div className="assistant-modal-glow" aria-hidden />
+            <header className="assistant-modal-head">
+              <div className="assistant-modal-brand">
+                <span className="assistant-modal-icon" aria-hidden>
+                  <Sparkles size={18} strokeWidth={2} />
+                </span>
+                <div>
+                  <p className="eyebrow">AquaSentinel</p>
+                  <h2>Field assistant</h2>
+                </div>
               </div>
               <button
                 type="button"
@@ -102,22 +118,21 @@ export default function AssistantFloat() {
                 <X size={18} strokeWidth={2} aria-hidden />
               </button>
             </header>
-            <div className="assistant-sheet-body">
+            <div className="assistant-modal-body">
               {loading ? (
                 <p className="hint">Loading saved reports…</p>
               ) : error ? (
                 <p className="hint">Couldn’t load reports: {error}</p>
               ) : reports.length === 0 ? (
                 <p className="hint">
-                  No saved reports yet. On Analysis, compare two dates and use{' '}
-                  <strong>Open HTML report</strong> / save so a report is stored,
-                  then reopen the assistant.
+                  No saved reports yet. On Analysis, compare two dates and save a
+                  report, then reopen the assistant.
                 </p>
               ) : (
                 <AssistantPanel reports={reports} />
               )}
             </div>
-          </aside>
+          </div>
         </div>
       )}
     </>
