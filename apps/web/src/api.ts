@@ -21,6 +21,33 @@ export type Site = {
   name: string;
   boundary: { type: 'Polygon'; coordinates: number[][][] };
   areaM2?: number;
+  plantType?: string;
+  plantAge?: string;
+  soilType?: string;
+};
+
+export type IrrigationPlan = {
+  siteId: string;
+  generatedAt: string;
+  label: string;
+  estimate: {
+    etcMmPerDay: number;
+    need7Mm: number;
+    need7M3: number;
+    perEventMm: number;
+    intervalDays: number;
+    unitNote: string;
+  };
+  schedule: {
+    date: string;
+    action: 'irrigate' | 'skip' | 'inspect';
+    volumeMm: number;
+    volumeM3: number;
+    reason: string;
+  }[];
+  facts: Record<string, unknown>;
+  narrative: { text: string; source: 'template' | 'ollama' | 'openai' };
+  honesty: string;
 };
 
 export type Observation = {
@@ -158,11 +185,24 @@ export const api = {
   health: () => request<{ ok: boolean; python: { ok: boolean } }>('/health'),
   listSites: () => request<Site[]>('/sites'),
   getSite: (id: string) => request<Site>(`/sites/${id}`),
-  createSite: (body: { name: string; boundary: Site['boundary']; areaM2?: number }) =>
-    request<Site>('/sites', { method: 'POST', body: JSON.stringify(body) }),
+  createSite: (body: {
+    name: string;
+    boundary: Site['boundary'];
+    areaM2?: number;
+    plantType?: string;
+    plantAge?: string;
+    soilType?: string;
+  }) => request<Site>('/sites', { method: 'POST', body: JSON.stringify(body) }),
   updateSite: (
     id: string,
-    body: { name?: string; boundary?: Site['boundary']; areaM2?: number },
+    body: {
+      name?: string;
+      boundary?: Site['boundary'];
+      areaM2?: number;
+      plantType?: string;
+      plantAge?: string;
+      soilType?: string;
+    },
   ) =>
     request<Site>(`/sites/${id}`, {
       method: 'PATCH',
@@ -209,5 +249,10 @@ export const api = {
     request<WeatherSeries>(`/sites/${siteId}/weather/refresh`, {
       method: 'POST',
       body: JSON.stringify(body),
+    }),
+  irrigationPlan: (siteId: string, observationId?: string) =>
+    request<IrrigationPlan>(`/sites/${siteId}/irrigation-plan`, {
+      method: 'POST',
+      body: JSON.stringify(observationId ? { observationId } : {}),
     }),
 };

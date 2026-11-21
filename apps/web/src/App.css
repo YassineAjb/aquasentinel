@@ -835,6 +835,43 @@ h2 {
   color: #b8e0bc;
 }
 
+.schedule-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.schedule-list li {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.15rem 0.65rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.78rem;
+}
+
+.schedule-list li em {
+  grid-column: 1 / -1;
+  font-style: normal;
+  color: var(--faint);
+  font-size: 0.72rem;
+}
+
+.schedule-list li.sched-irrigate {
+  border-color: rgba(47, 158, 68, 0.45);
+}
+
+.schedule-list li.sched-inspect {
+  border-color: rgba(255, 176, 80, 0.5);
+}
+
+.schedule-list li.sched-skip {
+  opacity: 0.85;
+}
+
 .mono {
   font-size: 0.7rem;
   max-width: 160px;

@@ -13,6 +13,7 @@ import {
 import type { Response } from 'express';
 import { CompareDto } from './dto/compare.dto';
 import { CreateSiteDto } from './dto/create-site.dto';
+import { IrrigationPlanDto } from './dto/irrigation-plan.dto';
 import { ScanDto } from './dto/scan.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { SitesService } from './sites.service';
@@ -68,6 +69,11 @@ export class SitesController {
     @Body() body: { from?: string; to?: string; around?: string },
   ) {
     return this.sitesService.refreshWeather(id, body || {});
+  }
+
+  @Post(':id/irrigation-plan')
+  irrigationPlan(@Param('id') id: string, @Body() dto: IrrigationPlanDto) {
+    return this.sitesService.irrigationPlan(id, dto || {});
   }
 
   @Get(':id/observations')

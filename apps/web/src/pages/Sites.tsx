@@ -7,6 +7,9 @@ export default function Sites() {
   const navigate = useNavigate();
   const [sites, setSites] = useState<Site[]>([]);
   const [siteName, setSiteName] = useState('');
+  const [plantType, setPlantType] = useState('');
+  const [plantAge, setPlantAge] = useState('');
+  const [soilType, setSoilType] = useState('');
   const [editing, setEditing] = useState<Site | null>(null);
   const [draftBoundary, setDraftBoundary] = useState<Site['boundary'] | null>(
     null,
@@ -56,10 +59,16 @@ export default function Sites() {
       const created = await api.createSite({
         name: siteName.trim() || 'Untitled field',
         boundary: draftBoundary,
+        plantType: plantType || undefined,
+        plantAge: plantAge || undefined,
+        soilType: soilType || undefined,
       });
       setEditing(created);
       setDraftBoundary(created.boundary);
       setSiteName(created.name);
+      setPlantType(created.plantType || '');
+      setPlantAge(created.plantAge || '');
+      setSoilType(created.soilType || '');
       await refresh();
       setStatus(`Saved “${created.name}”.`);
       setStatusKind('ok');
@@ -81,10 +90,16 @@ export default function Sites() {
       const updated = await api.updateSite(editing._id, {
         name: siteName.trim() || editing.name,
         boundary: draftBoundary,
+        plantType: plantType || undefined,
+        plantAge: plantAge || undefined,
+        soilType: soilType || undefined,
       });
       setEditing(updated);
       setDraftBoundary(updated.boundary);
       setSiteName(updated.name);
+      setPlantType(updated.plantType || '');
+      setPlantAge(updated.plantAge || '');
+      setSoilType(updated.soilType || '');
       await refresh();
       setStatus(`Updated “${updated.name}”.`);
       setStatusKind('ok');
@@ -103,6 +118,9 @@ export default function Sites() {
         setEditing(null);
         setDraftBoundary(null);
         setSiteName('');
+        setPlantType('');
+        setPlantAge('');
+        setSoilType('');
       }
       await refresh();
       setStatus(`Deleted “${site.name}”.`);
@@ -117,6 +135,9 @@ export default function Sites() {
     setEditing(null);
     setDraftBoundary(null);
     setSiteName('');
+    setPlantType('');
+    setPlantAge('');
+    setSoilType('');
     setStatus('Draw a new field on the map.');
     setStatusKind('');
   }
@@ -125,6 +146,9 @@ export default function Sites() {
     setEditing(site);
     setDraftBoundary(site.boundary);
     setSiteName(site.name);
+    setPlantType(site.plantType || '');
+    setPlantAge(site.plantAge || '');
+    setSoilType(site.soilType || '');
     setStatus(`Editing “${site.name}”.`);
     setStatusKind('ok');
   }
@@ -159,8 +183,47 @@ export default function Sites() {
               placeholder="e.g. North plot"
             />
           </label>
+          <label className="field">
+            <span>Type plante</span>
+            <select
+              value={plantType}
+              onChange={(e) => setPlantType(e.target.value)}
+            >
+              <option value="">Select…</option>
+              <option value="olivier">Olivier</option>
+              <option value="ble">Blé</option>
+              <option value="tomate">Tomate</option>
+              <option value="agrumes">Agrumes</option>
+              <option value="autre">Autre</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Âge plante</span>
+            <select
+              value={plantAge}
+              onChange={(e) => setPlantAge(e.target.value)}
+            >
+              <option value="">Select…</option>
+              <option value="jeune">Jeune</option>
+              <option value="vegetatif">Végétatif</option>
+              <option value="mature">Mature</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Type terre</span>
+            <select
+              value={soilType}
+              onChange={(e) => setSoilType(e.target.value)}
+            >
+              <option value="">Select…</option>
+              <option value="sableux">Sableux</option>
+              <option value="limoneux">Limoneux</option>
+              <option value="argileux">Argileux</option>
+            </select>
+          </label>
           <p className="hint tight">
-            Map tools: rectangle = drag · polygon = click corners
+            Crop profile feeds the irrigation advisor. Map: rectangle = drag ·
+            polygon = click corners.
           </p>
           <div className="actions stack">
             {editing ? (
@@ -238,7 +301,13 @@ export default function Sites() {
                       onClick={() => editSite(s)}
                     >
                       <strong>{s.name}</strong>
-                      <span>{active ? 'Editing now' : 'Click to edit boundary'}</span>
+                      <span>
+                        {active
+                          ? 'Editing now'
+                          : s.plantType && s.plantAge && s.soilType
+                            ? `${s.plantType} · ${s.plantAge} · ${s.soilType}`
+                            : 'Crop profile incomplete'}
+                      </span>
                     </button>
                     <div className="site-actions">
                       <button

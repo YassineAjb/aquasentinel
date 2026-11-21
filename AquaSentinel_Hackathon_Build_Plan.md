@@ -116,12 +116,12 @@ UI: estimated consumption + irrigation planification
 
 ### Build checklist
 
-- [ ] Extend Site model + Sites form: `plantType`, `plantAge`, `soilType` (+ optional area already known)
-- [ ] `POST /sites/:id/irrigation-plan` (body: optional `observationId`)
-- [ ] Rule service: Kc table + ETc + soil interval + NDVI stress adjustment
-- [ ] LLM service: prompt locked to facts JSON; return plan text + schedule bullets
-- [ ] Analysis UI: crop summary + **Plan irrigation** button → estimate + schedule panel
-- [ ] Dashboard/Sites: show crop profile completeness
+- [x] Extend Site model + Sites form: `plantType`, `plantAge`, `soilType` (+ optional area already known)
+- [x] `POST /sites/:id/irrigation-plan` (body: optional `observationId`)
+- [x] Rule service: Kc table + ETc + soil interval + NDVI stress adjustment
+- [x] LLM optional (`OPENAI_API_KEY` / `LLM_API_KEY`); else template narration from facts
+- [x] Analysis UI: crop summary + **Plan irrigation** button → estimate + schedule panel
+- [x] Dashboard/Sites: show crop profile completeness
 - [ ] Demo seed: one site with olive/wheat profile + plan that works offline-ish (cached facts)
 
 ### Exit criteria

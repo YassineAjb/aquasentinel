@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HealthController } from './health.controller';
+import { IrrigationModule } from './irrigation/irrigation.module';
 import { ScanModule } from './scan/scan.module';
 import { SitesModule } from './sites/sites.module';
 import { WeatherModule } from './weather/weather.module';
@@ -18,6 +19,7 @@ import { WeatherModule } from './weather/weather.module';
     ScanModule,
     SitesModule,
     WeatherModule,
+    IrrigationModule,
   ],
   controllers: [HealthController],
 })

@@ -16,6 +16,16 @@ export class Site {
 
   @Prop()
   areaM2?: number;
+
+  /** Farmer crop profile for irrigation advisor */
+  @Prop({ trim: true })
+  plantType?: string;
+
+  @Prop({ trim: true })
+  plantAge?: string;
+
+  @Prop({ trim: true })
+  soilType?: string;
 }
 
 export const SiteSchema = SchemaFactory.createForClass(Site);

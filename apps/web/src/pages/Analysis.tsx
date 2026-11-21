@@ -4,6 +4,7 @@ import {
   api,
   observationImageUrl,
   type CompareResult,
+  type IrrigationPlan,
   type Observation,
   type Site,
   type WeatherSeries,
@@ -50,6 +51,9 @@ export default function Analysis() {
   const [weather, setWeather] = useState<WeatherSeries | null>(null);
   const [weatherError, setWeatherError] = useState('');
   const [weatherBusy, setWeatherBusy] = useState(false);
+  const [irrigation, setIrrigation] = useState<IrrigationPlan | null>(null);
+  const [irrigationError, setIrrigationError] = useState('');
+  const [irrigationBusy, setIrrigationBusy] = useState(false);
   const [ndvi, setNdvi] = useState<{
     url: string;
     bounds: [[number, number], [number, number]];
@@ -436,6 +440,93 @@ export default function Analysis() {
             </p>
           </section>
         )}
+
+        <section className="panel">
+          <div className="panel-head">
+            <h2>Irrigation advisor</h2>
+            <button
+              className="text-btn"
+              type="button"
+              disabled={!siteId || irrigationBusy}
+              onClick={async () => {
+                if (!siteId) return;
+                try {
+                  setIrrigationBusy(true);
+                  setIrrigationError('');
+                  const plan = await api.irrigationPlan(
+                    siteId,
+                    observation?._id,
+                  );
+                  setIrrigation(plan);
+                  setStatus('Irrigation plan ready.');
+                  setStatusKind('ok');
+                } catch (err) {
+                  setIrrigation(null);
+                  setIrrigationError(
+                    err instanceof Error ? err.message : 'Plan failed',
+                  );
+                  setStatusKind('error');
+                } finally {
+                  setIrrigationBusy(false);
+                }
+              }}
+            >
+              {irrigationBusy ? 'Planning…' : 'Plan irrigation'}
+            </button>
+          </div>
+          {site && (
+            <p className="hint tight">
+              Profile:{' '}
+              {site.plantType && site.plantAge && site.soilType
+                ? `${site.plantType} · ${site.plantAge} · ${site.soilType}`
+                : 'incomplete — set type plante / âge / terre on Sites'}
+            </p>
+          )}
+          {irrigationError && (
+            <p className="status error">{irrigationError}</p>
+          )}
+          {irrigation && (
+            <>
+              <div className="stat">
+                <span>ETc (est.)</span>
+                <span>{irrigation.estimate.etcMmPerDay} mm/day</span>
+              </div>
+              <div className="stat">
+                <span>7-day need</span>
+                <span>
+                  {irrigation.estimate.need7Mm} mm ·{' '}
+                  {irrigation.estimate.need7M3} m³
+                </span>
+              </div>
+              <div className="stat">
+                <span>Pulse</span>
+                <span>
+                  ~{irrigation.estimate.perEventMm} mm /{' '}
+                  {irrigation.estimate.intervalDays}d
+                </span>
+              </div>
+              <p className="compare">{irrigation.narrative.text}</p>
+              <ul className="schedule-list">
+                {irrigation.schedule.map((row) => (
+                  <li key={row.date} className={`sched-${row.action}`}>
+                    <strong>{row.date}</strong>
+                    <span>
+                      {row.action}
+                      {row.volumeMm > 0
+                        ? ` · ${row.volumeMm} mm (${row.volumeM3} m³)`
+                        : ''}
+                    </span>
+                    <em>{row.reason}</em>
+                  </li>
+                ))}
+              </ul>
+              <p className="hint">
+                {irrigation.label} · narrative via {irrigation.narrative.source}
+              </p>
+              <p className="hint">{irrigation.honesty}</p>
+            </>
+          )}
+        </section>
 
         <section className="panel">
           <div className="panel-head">

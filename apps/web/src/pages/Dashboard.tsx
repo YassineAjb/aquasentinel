@@ -166,6 +166,11 @@ export default function Dashboard() {
                         : ''}
                     </span>
                   )}
+                  <span>
+                    {s.plantType && s.plantAge && s.soilType
+                      ? `${s.plantType} · ${s.plantAge} · ${s.soilType}`
+                      : 'Crop profile incomplete'}
+                  </span>
                 </div>
               </div>
             </button>

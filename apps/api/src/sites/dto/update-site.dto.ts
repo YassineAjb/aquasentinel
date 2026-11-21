@@ -15,4 +15,16 @@ export class UpdateSiteDto {
 
   @IsOptional()
   areaM2?: number;
+
+  @IsOptional()
+  @IsString()
+  plantType?: string;
+
+  @IsOptional()
+  @IsString()
+  plantAge?: string;
+
+  @IsOptional()
+  @IsString()
+  soilType?: string;
 }

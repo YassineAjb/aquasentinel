@@ -5,10 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { IrrigationService } from '../irrigation/irrigation.service';
 import { ScanService } from '../scan/scan.service';
 import { WeatherService } from '../weather/weather.service';
 import { CompareDto } from './dto/compare.dto';
 import { CreateSiteDto } from './dto/create-site.dto';
+import { IrrigationPlanDto } from './dto/irrigation-plan.dto';
 import { ScanDto } from './dto/scan.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { Observation, ObservationDocument } from './schemas/observation.schema';
@@ -25,6 +27,7 @@ export class SitesService {
     private readonly observationModel: Model<ObservationDocument>,
     private readonly scanService: ScanService,
     private readonly weatherService: WeatherService,
+    private readonly irrigationService: IrrigationService,
   ) {}
 
   private oid(id: string, label = 'id') {
@@ -162,6 +165,10 @@ export class SitesService {
       ...body,
       refresh: true,
     });
+  }
+
+  irrigationPlan(siteId: string, dto: IrrigationPlanDto = {}) {
+    return this.irrigationService.plan(siteId, dto.observationId);
   }
 
   async scan(siteId: string, dto: ScanDto = {}) {
