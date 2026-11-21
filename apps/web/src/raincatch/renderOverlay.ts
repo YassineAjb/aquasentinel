@@ -3,7 +3,7 @@ import type { TerrainAnalysis } from './types';
 export type VizMode = 'elevation' | 'flood' | 'water' | 'slope';
 
 /** Spectral: blue = low, red = high (CutSheet-style elevation). */
-function elevColor(t: number): [number, number, number] {
+export function elevColor(t: number): [number, number, number] {
   const stops: [number, number, number, number][] = [
     [0, 40, 80, 180],
     [0.25, 50, 170, 190],
@@ -26,7 +26,7 @@ function elevColor(t: number): [number, number, number] {
   return [200, 55, 40];
 }
 
-function floodColor(t: number): [number, number, number] {
+export function floodColor(t: number): [number, number, number] {
   if (t < 0.15) return [30, 50, 40];
   if (t < 0.35) return [40, 100, 140];
   if (t < 0.55) return [45, 145, 200];
@@ -34,7 +34,7 @@ function floodColor(t: number): [number, number, number] {
   return [200, 235, 255];
 }
 
-function slopeColor(t: number): [number, number, number] {
+export function slopeColor(t: number): [number, number, number] {
   if (t < 0.15) return [55, 110, 70];
   if (t < 0.35) return [130, 150, 55];
   if (t < 0.55) return [190, 140, 45];

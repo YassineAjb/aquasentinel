@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, type Site } from '../api';
 import RainCatchMap from '../components/RainCatchMap';
+import RainCatchTerrain3D from '../components/RainCatchTerrain3D';
 import { DEMO_DISCLAIMER, ringBounds } from '../raincatch/engine/demoTerrain';
 import { SCENARIOS, SOILS } from '../raincatch/config';
 import type { VizMode } from '../raincatch/renderOverlay';
@@ -71,6 +72,7 @@ export default function RainCatch() {
   const [siteId, setSiteId] = useState('');
   const [panelOpen, setPanelOpen] = useState(true);
   const [showMore, setShowMore] = useState(false);
+  const [heightStretch, setHeightStretch] = useState(12);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,22 +119,36 @@ export default function RainCatch() {
       bounds: ringBounds(ring) ?? undefined,
       polygon: ring.length >= 3 ? ring : undefined,
     });
-    if (viz === 'elevation') setViz('water');
+    setViz('water');
+    actions.setView('3d');
   }
 
   return (
     <div className="rc-stage">
-      <RainCatchMap
-        site={site}
-        analysis={state.analysis}
-        floodScore={state.sim?.floodScore}
-        waterDepth={state.sim?.waterDepth}
-        candidates={state.sim?.candidates}
-        selectedCandidateId={state.selection.candidateId}
-        mode={viz}
-        opacity={state.layerOpacity}
-        onPickCandidate={(id) => actions.selectCandidate(id)}
-      />
+      {state.view === '3d' && state.analysis ? (
+        <RainCatchTerrain3D
+          analysis={state.analysis}
+          floodScore={state.sim?.floodScore}
+          waterDepth={state.sim?.waterDepth}
+          candidates={state.sim?.candidates}
+          selectedCandidateId={state.selection.candidateId}
+          mode={viz}
+          heightStretch={heightStretch}
+          onPickCandidate={(id) => actions.selectCandidate(id)}
+        />
+      ) : (
+        <RainCatchMap
+          site={site}
+          analysis={state.analysis}
+          floodScore={state.sim?.floodScore}
+          waterDepth={state.sim?.waterDepth}
+          candidates={state.sim?.candidates}
+          selectedCandidateId={state.selection.candidateId}
+          mode={viz}
+          opacity={state.layerOpacity}
+          onPickCandidate={(id) => actions.selectCandidate(id)}
+        />
+      )}
 
       {!panelOpen && (
         <button
@@ -211,7 +227,29 @@ export default function RainCatch() {
             <>
               <div className="rc-divider" />
 
-              <div className="rc-section-label">Map layer</div>
+              <div className="rc-section-label">View</div>
+              <div className="rc-chip-row" role="tablist" aria-label="View mode">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={state.view === '2d'}
+                  className={`rc-chip${state.view === '2d' ? ' active' : ''}`}
+                  onClick={() => actions.setView('2d')}
+                >
+                  Map 2D
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={state.view === '3d'}
+                  className={`rc-chip${state.view === '3d' ? ' active' : ''}`}
+                  onClick={() => actions.setView('3d')}
+                >
+                  Terrain 3D
+                </button>
+              </div>
+
+              <div className="rc-section-label">Layer</div>
               <div className="rc-chip-row" role="tablist" aria-label="Map layer">
                 {VIZ.map((v) => (
                   <button
@@ -227,18 +265,33 @@ export default function RainCatch() {
                 ))}
               </div>
 
-              <label className="field rc-opacity">
-                Overlay strength
-                <input
-                  type="range"
-                  min={0.25}
-                  max={1}
-                  step={0.05}
-                  value={state.layerOpacity}
-                  onChange={(e) => actions.setOpacity(Number(e.target.value))}
-                />
-                <span>{Math.round(state.layerOpacity * 100)}%</span>
-              </label>
+              {state.view === '2d' ? (
+                <label className="field rc-opacity">
+                  Overlay strength
+                  <input
+                    type="range"
+                    min={0.25}
+                    max={1}
+                    step={0.05}
+                    value={state.layerOpacity}
+                    onChange={(e) => actions.setOpacity(Number(e.target.value))}
+                  />
+                  <span>{Math.round(state.layerOpacity * 100)}%</span>
+                </label>
+              ) : (
+                <label className="field rc-opacity">
+                  Height stretch
+                  <input
+                    type="range"
+                    min={1}
+                    max={30}
+                    step={1}
+                    value={heightStretch}
+                    onChange={(e) => setHeightStretch(Number(e.target.value))}
+                  />
+                  <span>{heightStretch}×</span>
+                </label>
+              )}
 
               <div className="rc-divider" />
 
