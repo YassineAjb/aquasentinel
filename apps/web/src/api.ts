@@ -283,3 +283,76 @@ export const api = {
       body: JSON.stringify(observationId ? { observationId } : {}),
     }),
 };
+
+export type WaterGuardLive = {
+  siteId: string;
+  active: boolean;
+  expectedFlow: number;
+  flowRate: number;
+  totalVolumeLiters: number;
+  estimatedLossLiters: number;
+  status: string;
+  scenario?: string;
+};
+
+export type WaterMeasurement = {
+  _id?: string;
+  siteId: string;
+  flowRate: number;
+  expectedFlow: number;
+  volumeLiters: number;
+  estimatedLossLiters: number;
+  irrigationActive: boolean;
+  scenario: string;
+  status: string;
+  timestamp?: string;
+};
+
+export type WaterAlert = {
+  _id: string;
+  siteId: string;
+  type: string;
+  severity: string;
+  expectedFlow: number;
+  measuredFlow: number;
+  excessPercentage: number;
+  estimatedLossLiters: number;
+  status: string;
+  explanation: string;
+  createdAt?: string;
+  resolvedAt?: string | null;
+};
+
+export const waterguardApi = {
+  start: (siteId: string, expectedFlow: number) =>
+    request<WaterGuardLive>(`/waterguard/${siteId}/start`, {
+      method: 'POST',
+      body: JSON.stringify({ expectedFlow }),
+    }),
+  stop: (siteId: string) =>
+    request<WaterGuardLive>(`/waterguard/${siteId}/stop`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+  simulate: (
+    siteId: string,
+    scenario: 'NORMAL' | 'SLOW_LEAK' | 'MAJOR_LEAK' | 'OFF',
+  ) =>
+    request<WaterGuardLive>(`/waterguard/${siteId}/simulate`, {
+      method: 'POST',
+      body: JSON.stringify({ scenario }),
+    }),
+  live: (siteId: string) =>
+    request<WaterGuardLive>(`/waterguard/${siteId}/live`),
+  history: (siteId: string, limit = 100) =>
+    request<WaterMeasurement[]>(
+      `/waterguard/${siteId}/history?limit=${limit}`,
+    ),
+  alerts: (siteId: string) =>
+    request<WaterAlert[]>(`/waterguard/${siteId}/alerts`),
+  resolveAlert: (alertId: string) =>
+    request<WaterAlert>(`/waterguard/alerts/${alertId}/resolve`, {
+      method: 'PATCH',
+      body: JSON.stringify({}),
+    }),
+};

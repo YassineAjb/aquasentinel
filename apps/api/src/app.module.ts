@@ -5,6 +5,7 @@ import { HealthController } from './health.controller';
 import { IrrigationModule } from './irrigation/irrigation.module';
 import { ScanModule } from './scan/scan.module';
 import { SitesModule } from './sites/sites.module';
+import { WaterGuardModule } from './waterguard/waterguard/waterguard.module';
 import { WeatherModule } from './weather/weather.module';
 
 @Module({
@@ -20,6 +21,7 @@ import { WeatherModule } from './weather/weather.module';
     SitesModule,
     WeatherModule,
     IrrigationModule,
+    WaterGuardModule,
   ],
   controllers: [HealthController],
 })

@@ -7,6 +7,7 @@ import {
   MapPinned,
   Mountain,
   PanelLeftClose,
+  ShieldAlert,
   type LucideProps,
 } from 'lucide-react';
 import { NavLink, Route, Routes } from 'react-router-dom';
@@ -17,6 +18,7 @@ import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import RainCatch from './pages/RainCatch';
 import Sites from './pages/Sites';
+import WaterGuard from './pages/WaterGuard';
 import './App.css';
 
 type NavIcon = ComponentType<LucideProps>;
@@ -31,6 +33,7 @@ const NAV: {
   { to: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { to: '/sites', label: 'Sites', Icon: MapPinned },
   { to: '/analysis', label: 'Analysis', Icon: ChartSpline },
+  { to: '/waterguard', label: 'WaterGuard', Icon: ShieldAlert },
   { to: '/raincatch', label: 'RainCatch', Icon: Droplets },
   { to: '/cutsheetrx', label: 'CutSheetRX', Icon: Mountain },
 ];
@@ -117,6 +120,7 @@ export default function App() {
           <Route path="/sites" element={<Sites />} />
           <Route path="/analysis" element={<AnalysisPicker />} />
           <Route path="/analysis/:siteId" element={<Analysis />} />
+          <Route path="/waterguard" element={<WaterGuard />} />
           <Route path="/raincatch" element={<RainCatch />} />
           <Route path="/cutsheetrx" element={<CutSheetRX />} />
         </Routes>
