@@ -1307,7 +1307,7 @@ h2 {
 
 }
 
-/* —— RainCatch (map-first) —— */
+/* ââ RainCatch (map-first) ââ */
 .rc-stage {
   position: relative;
   flex: 1;
@@ -1846,7 +1846,7 @@ h2 {
   }
 }
 
-/* —— CutSheetRX webview —— */
+/* ââ CutSheetRX webview ââ */
 .csrx-stage {
   flex: 1;
   min-height: 0;
@@ -2001,38 +2001,47 @@ h2 {
   }
 }
 
-/* �� Field assistant FAB �� */
+/* —— Field assistant (centered liquid glass) —— */
 .assistant-fab {
   position: fixed;
   right: 1.15rem;
   bottom: 1.15rem;
   z-index: 1200;
-  width: 3.35rem;
-  height: 3.35rem;
+  width: 3.5rem;
+  height: 3.5rem;
   padding: 0;
   border-radius: 999px;
-  border: 1px solid rgba(47, 158, 68, 0.45);
-  background: linear-gradient(145deg, #2f9e44, #1e6b30);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background:
+    linear-gradient(145deg, rgba(70, 190, 100, 0.95), rgba(30, 107, 48, 0.92));
   color: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(47, 158, 68, 0.15);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 5px rgba(47, 158, 68, 0.14);
+  backdrop-filter: blur(10px);
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .assistant-fab:hover {
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 0 5px rgba(47, 158, 68, 0.2);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 0 0 6px rgba(47, 158, 68, 0.2);
 }
 
 .assistant-layer {
   position: fixed;
   inset: 0;
   z-index: 1300;
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
 }
 
 .assistant-backdrop {
@@ -2040,102 +2049,326 @@ h2 {
   inset: 0;
   border: 0;
   border-radius: 0;
-  background: rgba(4, 8, 6, 0.45);
+  background:
+    radial-gradient(900px 480px at 50% 40%, rgba(47, 158, 68, 0.16), transparent 55%),
+    rgba(4, 8, 6, 0.55);
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
   cursor: pointer;
+  animation: assistant-fade 0.25s ease;
 }
 
-.assistant-sheet {
+.assistant-modal {
   position: relative;
-  width: min(400px, 100%);
-  height: 100%;
+  z-index: 1;
+  width: min(720px, 100%);
+  max-height: min(860px, calc(100vh - 2.5rem));
   display: flex;
   flex-direction: column;
-  background: rgba(12, 18, 15, 0.97);
-  border-left: 1px solid var(--line);
-  box-shadow: -18px 0 48px rgba(0, 0, 0, 0.4);
-  animation: assistant-in 0.22s ease;
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03) 42%, rgba(18, 32, 24, 0.42)),
+    rgba(12, 20, 16, 0.48);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(28px) saturate(1.45);
+  -webkit-backdrop-filter: blur(28px) saturate(1.45);
+  animation: assistant-pop 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@keyframes assistant-in {
-  from { transform: translateX(12px); opacity: 0.6; }
-  to { transform: translateX(0); opacity: 1; }
+.assistant-modal-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 55%;
+  background:
+    radial-gradient(ellipse at 30% 0%, rgba(90, 210, 130, 0.28), transparent 55%),
+    radial-gradient(ellipse at 80% 10%, rgba(120, 190, 255, 0.12), transparent 50%);
+  filter: blur(2px);
 }
 
-.assistant-sheet-head {
+.assistant-modal-head {
+  position: relative;
+  z-index: 1;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
+  gap: 0.85rem;
+  padding: 1.15rem 1.25rem 0.95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent);
+}
+
+.assistant-modal-brand {
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
-  padding: 1rem 1rem 0.75rem;
-  border-bottom: 1px solid var(--line);
+  min-width: 0;
 }
 
-.assistant-sheet-head .eyebrow {
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #7dbe8a;
-  margin-bottom: 0.2rem;
-  font-weight: 600;
-}
-
-.assistant-sheet-head h2 {
-  font-family: var(--display);
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  text-transform: none;
-  color: var(--text);
-}
-
-.assistant-close {
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--muted);
+.assistant-modal-icon {
+  width: 2.45rem;
+  height: 2.45rem;
+  border-radius: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  color: #dff5e4;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(47, 158, 68, 0.25));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.assistant-modal-head .eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9ed4a8;
+  margin-bottom: 0.15rem;
+  font-weight: 650;
+}
+
+.assistant-modal-head h2 {
+  font-family: var(--display);
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-transform: none;
+  color: #f3faf4;
+  line-height: 1.15;
+}
+
+.assistant-close {
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.75);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
 }
 
 .assistant-close:hover {
-  color: var(--text);
-  border-color: rgba(47, 158, 68, 0.4);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(47, 158, 68, 0.45);
 }
 
-.assistant-sheet-body {
+.assistant-modal-body {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 0.85rem 1rem 1.25rem;
+  padding: 1rem 1.25rem 1.35rem;
 }
 
-.assistant-sheet-body .panel {
+.assistant-modal-body .panel {
   background: transparent;
   border: 0;
   padding: 0;
 }
 
-@media (max-width: 640px) {
-  .assistant-fab {
-    right: 0.85rem;
-    bottom: 0.85rem;
-  }
-  .assistant-sheet {
-    width: 100%;
+.assistant-modal-body .field,
+.assistant-modal-body .hint {
+  color: rgba(230, 240, 232, 0.78);
+}
+
+.assistant-modal-body input,
+.assistant-modal-body select {
+  background: rgba(8, 14, 11, 0.45);
+  border-color: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+}
+
+.assistant-modal-body .chip {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(240, 248, 242, 0.9);
+}
+
+.assistant-modal-body .chip:hover:not(:disabled) {
+  border-color: rgba(47, 158, 68, 0.5);
+  background: rgba(47, 158, 68, 0.18);
+}
+
+.assistant-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.assistant-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 220px;
+  max-height: min(42vh, 420px);
+  overflow-y: auto;
+  margin: 0.75rem 0;
+  padding: 0.85rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.assistant-composer {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 3.35rem;
+  padding: 0.4rem 0.45rem 0.4rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(24, 24, 24, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.assistant-composer input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #f2f2f2;
+  padding: 0.55rem 0.35rem;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.assistant-composer input::placeholder {
+  color: rgba(180, 180, 180, 0.72);
+}
+
+.assistant-composer input:disabled {
+  opacity: 0.55;
+}
+
+.assistant-composer.is-listening {
+  border-color: rgba(48, 104, 208, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 0 3px rgba(48, 104, 208, 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.assistant-voice-btn {
+  width: 2.35rem;
+  height: 2.35rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: #3068d0;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.assistant-voice-btn:hover:not(:disabled) {
+  background: #3b74df;
+  transform: scale(1.04);
+}
+
+.assistant-voice-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.assistant-voice-btn.is-send {
+  background: #ececec;
+  color: #111;
+}
+
+.assistant-voice-btn.is-send:hover:not(:disabled) {
+  background: #fff;
+}
+
+.assistant-voice-btn.is-stop,
+.assistant-voice-btn.is-listening {
+  background: #3a3a3a;
+  color: #f0f0f0;
+}
+
+.assistant-voice-btn.is-stop:hover,
+.assistant-voice-btn.is-listening:hover {
+  background: #4a4a4a;
+}
+
+.assistant-voice-btn.is-listening {
+  animation: assistant-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes assistant-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(48, 104, 208, 0.45); }
+  50% { box-shadow: 0 0 0 8px rgba(48, 104, 208, 0); }
+}
+
+@media (max-width: 560px) {
+  .assistant-controls {
+    grid-template-columns: 1fr;
   }
 }
 
 .assistant-cursor {
   display: inline-block;
   margin-left: 1px;
-  color: #7dbe8a;
+  color: #9ed4a8;
   animation: assistant-blink 1s steps(1) infinite;
 }
 
 @keyframes assistant-blink {
   50% { opacity: 0; }
+}
+
+@keyframes assistant-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes assistant-pop {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 720px) {
+  .assistant-layer {
+    padding: 0.65rem;
+    align-items: end;
+  }
+
+  .assistant-modal {
+    width: 100%;
+    max-height: min(92vh, 920px);
+    border-radius: 22px 22px 16px 16px;
+  }
+
+  .assistant-fab {
+    right: 0.85rem;
+    bottom: 0.85rem;
+  }
 }

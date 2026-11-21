@@ -1,4 +1,40 @@
 import { useEffect, useRef, useState } from 'react';
+import { ArrowUp, AudioLines, Square } from 'lucide-react';
+
+type SpeechRec = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((ev: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((ev: { error?: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+};
+
+type SpeechRecognitionEventLike = {
+  resultIndex: number;
+  results: ArrayLike<{
+    isFinal: boolean;
+    0: { transcript: string };
+  }>;
+};
+
+function getSpeechRecognition(): (new () => SpeechRec) | null {
+  const w = window as Window & {
+    SpeechRecognition?: new () => SpeechRec;
+    webkitSpeechRecognition?: new () => SpeechRec;
+  };
+  return w.SpeechRecognition || w.webkitSpeechRecognition || null;
+}
+
+const SPEECH_LANG: Record<string, string> = {
+  fr: 'fr-FR',
+  en: 'en-US',
+  'ar-tn': 'ar-TN',
+  ja: 'ja-JP',
+};
 
 const API_URL =
   (import.meta.env.VITE_API_URL as string | undefined) || 'http://127.0.0.1:3000';
@@ -51,8 +87,12 @@ export default function AssistantPanel({
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [voiceHint, setVoiceHint] = useState('');
   const bottom = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const recognitionRef = useRef<SpeechRec | null>(null);
+  const askRef = useRef<(q: string) => void>(() => {});
 
   useEffect(() => {
     if (activeReportId) setReportId(activeReportId);
@@ -67,6 +107,77 @@ export default function AssistantPanel({
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, busy]);
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+      recognitionRef.current = null;
+    };
+  }, []);
+
+  function stopListening() {
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setListening(false);
+  }
+
+  function startListening() {
+    const Ctor = getSpeechRecognition();
+    if (!Ctor) {
+      setVoiceHint('Voice input needs Chrome or Edge.');
+      return;
+    }
+    if (!reportId || busy) return;
+
+    setVoiceHint('');
+    recognitionRef.current?.abort();
+
+    const rec = new Ctor();
+    rec.lang = SPEECH_LANG[lang] || 'en-US';
+    rec.continuous = false;
+    rec.interimResults = true;
+    recognitionRef.current = rec;
+
+    rec.onresult = (ev) => {
+      let finalText = '';
+      let interim = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const chunk = ev.results[i][0].transcript;
+        if (ev.results[i].isFinal) finalText += chunk;
+        else interim += chunk;
+      }
+      const spoken = (finalText || interim).trim();
+      if (spoken) setInput(spoken);
+      if (finalText.trim()) {
+        setListening(false);
+        recognitionRef.current = null;
+        askRef.current(finalText.trim());
+      }
+    };
+
+    rec.onerror = (ev) => {
+      setListening(false);
+      recognitionRef.current = null;
+      if (ev.error === 'not-allowed') {
+        setVoiceHint('Microphone permission denied.');
+      } else if (ev.error !== 'aborted' && ev.error !== 'no-speech') {
+        setVoiceHint('Couldn’t hear that — try again.');
+      }
+    };
+
+    rec.onend = () => {
+      setListening(false);
+      recognitionRef.current = null;
+    };
+
+    try {
+      rec.start();
+      setListening(true);
+    } catch {
+      setListening(false);
+      setVoiceHint('Couldn’t start the microphone.');
+    }
+  }
 
   async function ask(question: string) {
     const q = question.trim();
@@ -188,14 +299,30 @@ export default function AssistantPanel({
     }
   }
 
+  askRef.current = ask;
+
+  const hasText = input.trim().length > 0;
+
   const bubble = (role: Msg['role']): React.CSSProperties => ({
     alignSelf: role === 'user' ? 'flex-end' : 'flex-start',
-    maxWidth: '92%',
-    padding: '8px 11px',
-    borderRadius: 12,
+    maxWidth: '88%',
+    padding: '10px 13px',
+    borderRadius: role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
     whiteSpace: 'pre-wrap',
-    background: role === 'user' ? 'rgba(11,93,90,.88)' : 'rgba(127,127,127,.16)',
-    color: role === 'user' ? '#fff' : 'inherit',
+    border:
+      role === 'user'
+        ? '1px solid rgba(120, 210, 150, 0.35)'
+        : '1px solid rgba(255, 255, 255, 0.14)',
+    background:
+      role === 'user'
+        ? 'linear-gradient(145deg, rgba(47, 158, 68, 0.55), rgba(20, 90, 50, 0.45))'
+        : 'rgba(255, 255, 255, 0.08)',
+    boxShadow:
+      role === 'user'
+        ? 'inset 0 1px 0 rgba(255,255,255,0.22)'
+        : 'inset 0 1px 0 rgba(255,255,255,0.12)',
+    color: role === 'user' ? '#f4fff6' : 'rgba(240, 248, 242, 0.95)',
+    backdropFilter: 'blur(10px)',
   });
 
   const last = messages[messages.length - 1];
@@ -203,31 +330,29 @@ export default function AssistantPanel({
     busy && last?.role === 'assistant' && last.content.length === 0;
 
   return (
-    <section className="panel">
-      <div className="panel-head">
-        <h2>Assistant</h2>
+    <section className="panel assistant-chat">
+      <div className="assistant-controls">
+        <label className="field">
+          <span>Report</span>
+          <select value={reportId} onChange={(e) => setReportId(e.target.value)}>
+            {reports.map((r) => (
+              <option key={r._id} value={r._id}>
+                {r.dateA || '?'} → {r.dateB || '?'}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="field">
+          <span>Answer language</span>
+          <select value={lang} onChange={(e) => setLang(e.target.value)}>
+            <option value="fr">Français</option>
+            <option value="ar-tn">العربية (تونسي)</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+          </select>
+        </label>
       </div>
-
-      <label className="field">
-        <span>Report</span>
-        <select value={reportId} onChange={(e) => setReportId(e.target.value)}>
-          {reports.map((r) => (
-            <option key={r._id} value={r._id}>
-              {r.dateA || '?'} → {r.dateB || '?'}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="field">
-        <span>Answer language</span>
-        <select value={lang} onChange={(e) => setLang(e.target.value)}>
-          <option value="fr">Français</option>
-          <option value="ar-tn">العربية (تونسي)</option>
-          <option value="en">English</option>
-          <option value="ja">日本語</option>
-        </select>
-      </label>
 
       <div className="layer-toggle" style={{ flexWrap: 'wrap' }}>
         {(QUICK[lang] || QUICK.en).map((q) => (
@@ -243,17 +368,7 @@ export default function AssistantPanel({
         ))}
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 8,
-          maxHeight: 340,
-          overflowY: 'auto',
-          margin: '10px 0',
-        }}
-        aria-live="polite"
-      >
+      <div className="assistant-thread" aria-live="polite">
         {messages.length === 0 && (
           <p className="hint">Pick a question above or type your own.</p>
         )}
@@ -282,35 +397,70 @@ export default function AssistantPanel({
         <div ref={bottom} />
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div className={`assistant-composer${listening ? ' is-listening' : ''}`}>
         <input
-          style={{ flex: 1 }}
           value={input}
-          placeholder="Ask about your field…"
+          placeholder={listening ? 'Listening…' : 'Ask about your field…'}
           disabled={!reportId || busy}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && ask(input)}
+          onChange={(e) => {
+            setInput(e.target.value);
+            if (listening) stopListening();
+          }}
+          onKeyDown={(e) => e.key === 'Enter' && hasText && ask(input)}
         />
         {busy ? (
           <button
-            className="ghost"
             type="button"
+            className="assistant-voice-btn is-stop"
+            aria-label="Stop"
+            title="Stop"
             onClick={() => abortRef.current?.abort()}
           >
-            Stop
+            <Square size={14} strokeWidth={2.5} fill="currentColor" aria-hidden />
+          </button>
+        ) : hasText ? (
+          <button
+            type="button"
+            className="assistant-voice-btn is-send"
+            aria-label="Send"
+            title="Send"
+            disabled={!reportId}
+            onClick={() => ask(input)}
+          >
+            <ArrowUp size={18} strokeWidth={2.5} aria-hidden />
+          </button>
+        ) : listening ? (
+          <button
+            type="button"
+            className="assistant-voice-btn is-listening"
+            aria-label="Stop listening"
+            title="Stop listening"
+            onClick={stopListening}
+          >
+            <Square size={14} strokeWidth={2.5} fill="currentColor" aria-hidden />
           </button>
         ) : (
           <button
-            className="primary"
             type="button"
-            disabled={!reportId || !input.trim()}
-            onClick={() => ask(input)}
+            className="assistant-voice-btn"
+            aria-label="Voice input"
+            title="Talk"
+            disabled={!reportId}
+            onClick={startListening}
           >
-            Send
+            <AudioLines size={18} strokeWidth={2.25} aria-hidden />
           </button>
         )}
       </div>
-      <p className="hint">Answers stream live from the report + knowledge base (local model).</p>
+      {voiceHint ? (
+        <p className="hint">{voiceHint}</p>
+      ) : (
+        <p className="hint">
+          {listening
+            ? 'Speak now — your question will send when you pause.'
+            : 'Type to send, or tap the waveform to talk.'}
+        </p>
+      )}
     </section>
   );
 }
