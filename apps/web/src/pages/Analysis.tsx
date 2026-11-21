@@ -10,7 +10,6 @@ import {
   type WeatherSeries,
 } from '../api';
 import FieldMap from '../components/FieldMap';
-import AssistantPanel from '../components/AssistantPanel';
 
 const LOW_COVERAGE = 70;
 type SceneVisual = 'original' | 'enhanced';

@@ -55,4 +55,58 @@ export class OllamaService {
     });
     return r.message?.content ?? '';
   }
+
+  /** Stream chat tokens from Ollama (NDJSON). */
+  async *chatStream(
+    messages: { role: string; content: string }[],
+  ): AsyncGenerator<string> {
+    const res = await fetch(`${this.base}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: this.chatModel,
+        messages,
+        stream: true,
+        options: { temperature: 0.3 },
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`Ollama /api/chat -> ${res.status}: ${await res.text()}`);
+    }
+    if (!res.body) throw new Error('Ollama stream has no body');
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() ?? '';
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        try {
+          const json = JSON.parse(trimmed) as {
+            message?: { content?: string };
+            done?: boolean;
+          };
+          const piece = json.message?.content;
+          if (piece) yield piece;
+        } catch {
+          /* skip malformed chunk */
+        }
+      }
+    }
+    if (buf.trim()) {
+      try {
+        const json = JSON.parse(buf.trim()) as { message?: { content?: string } };
+        const piece = json.message?.content;
+        if (piece) yield piece;
+      } catch {
+        /* ignore */
+      }
+    }
+  }
 }

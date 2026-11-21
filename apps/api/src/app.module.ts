@@ -23,6 +23,7 @@ import { AssistantModule } from './assistant/assistant.module';
     WeatherModule,
     IrrigationModule,
     WaterGuardModule,
+    AssistantModule,
   ],
   controllers: [HealthController],
 })
