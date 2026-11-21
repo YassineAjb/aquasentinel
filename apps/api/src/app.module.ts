@@ -7,6 +7,7 @@ import { ScanModule } from './scan/scan.module';
 import { SitesModule } from './sites/sites.module';
 import { WaterGuardModule } from './waterguard/waterguard/waterguard.module';
 import { WeatherModule } from './weather/weather.module';
+import { AssistantModule } from './assistant/assistant.module';
 
 @Module({
   imports: [
