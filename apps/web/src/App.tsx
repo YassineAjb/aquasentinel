@@ -1,6 +1,7 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import {
   ChartSpline,
+  Droplets,
   Home,
   LayoutDashboard,
   MapPinned,
@@ -12,6 +13,7 @@ import Analysis from './pages/Analysis';
 import AnalysisPicker from './pages/AnalysisPicker';
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
+import RainCatch from './pages/RainCatch';
 import Sites from './pages/Sites';
 import './App.css';
 
@@ -27,6 +29,7 @@ const NAV: {
   { to: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { to: '/sites', label: 'Sites', Icon: MapPinned },
   { to: '/analysis', label: 'Analysis', Icon: ChartSpline },
+  { to: '/raincatch', label: 'RainCatch', Icon: Droplets },
 ];
 
 const STORAGE_KEY = 'aquasentinel-nav-collapsed';
@@ -111,6 +114,7 @@ export default function App() {
           <Route path="/sites" element={<Sites />} />
           <Route path="/analysis" element={<AnalysisPicker />} />
           <Route path="/analysis/:siteId" element={<Analysis />} />
+          <Route path="/raincatch" element={<RainCatch />} />
         </Routes>
       </div>
     </div>
