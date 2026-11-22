@@ -271,6 +271,34 @@ const en: Dict = {
   'assistant.micDenied': 'Microphone permission denied.',
   'assistant.voiceRetry': 'Couldn’t hear that — try again.',
   'assistant.micFail': 'Couldn’t start the microphone.',
+
+  'tutorial.help': 'Guide',
+  'tutorial.eyebrow': 'Step {step} of {total}',
+  'tutorial.next': 'Next',
+  'tutorial.back': 'Back',
+  'tutorial.skip': 'Skip',
+  'tutorial.start': 'Add my first field',
+  'tutorial.welcome.title': 'Welcome to SAKIYA',
+  'tutorial.welcome.body':
+    'This short guide shows how to use the app. Big buttons, few steps — take your time.',
+  'tutorial.sites.title': '1. Save your field',
+  'tutorial.sites.body':
+    'Open Sites. Draw the outline of your plot on the map, add crop and soil, then save.',
+  'tutorial.analysis.title': '2. Check crop health',
+  'tutorial.analysis.body':
+    'Open Analysis. Pick your field and run a scan to see greenness from satellite images.',
+  'tutorial.water.title': '3. Watch your water',
+  'tutorial.water.body':
+    'Open WaterGuard to spot leaks and waste while you irrigate.',
+  'tutorial.cutsheet.title': '4. Read your terrain',
+  'tutorial.cutsheet.body':
+    'Open CutSheetRX to see slopes and land shape — useful for drainage and rain harvesting.',
+  'tutorial.assistant.title': '5. Ask for help anytime',
+  'tutorial.assistant.body':
+    'Tap the assistant button (bottom corner) to ask questions about your field in plain language.',
+  'tutorial.done.title': 'You’re ready',
+  'tutorial.done.body':
+    'Start with Sites: draw and save your first field. You can replay this guide anytime from Guide in the menu.',
 };
 
 const ar: Dict = {
@@ -529,6 +557,34 @@ const ar: Dict = {
   'assistant.micDenied': 'تم رفض إذن الميكروفون.',
   'assistant.voiceRetry': 'لم نسمع ذلك — حاول مجدداً.',
   'assistant.micFail': 'تعذّر تشغيل الميكروفون.',
+
+  'tutorial.help': 'الدليل',
+  'tutorial.eyebrow': 'الخطوة {step} من {total}',
+  'tutorial.next': 'التالي',
+  'tutorial.back': 'رجوع',
+  'tutorial.skip': 'تخطي',
+  'tutorial.start': 'أضف حقلي الأول',
+  'tutorial.welcome.title': 'مرحباً بك في ساقية',
+  'tutorial.welcome.body':
+    'هذا الدليل القصير يشرح استخدام التطبيق. أزرار كبيرة وخطوات قليلة — خذ وقتك.',
+  'tutorial.sites.title': '1. احفظ حقلك',
+  'tutorial.sites.body':
+    'افتح الحقول. ارسم حدود القطعة على الخريطة، أضف المحصول والتربة، ثم احفظ.',
+  'tutorial.analysis.title': '2. راقب صحة المحصول',
+  'tutorial.analysis.body':
+    'افتح التحليل. اختر حقلك وشغّل مسحاً لرؤية الاخضرار من صور الأقمار.',
+  'tutorial.water.title': '3. راقب الماء',
+  'tutorial.water.body':
+    'افتح حارس الماء لاكتشاف التسرب والهدر أثناء الري.',
+  'tutorial.cutsheet.title': '4. اقرأ تضاريس أرضك',
+  'tutorial.cutsheet.body':
+    'افتح تضاريس LiDAR لرؤية المنحدرات وشكل الأرض — مفيد للصرف وحصاد الأمطار.',
+  'tutorial.assistant.title': '5. اطلب المساعدة في أي وقت',
+  'tutorial.assistant.body':
+    'اضغط زر المساعد (الزاوية السفلية) لطرح أسئلة عن حقلك بلغة بسيطة.',
+  'tutorial.done.title': 'أنت جاهز',
+  'tutorial.done.body':
+    'ابدأ من الحقول: ارسم واحفظ حقلك الأول. يمكنك إعادة هذا الدليل من «الدليل» في القائمة.',
 };
 
 const ja: Dict = {
@@ -787,6 +843,34 @@ const ja: Dict = {
   'assistant.micDenied': 'マイクの許可が拒否されました。',
   'assistant.voiceRetry': '聞き取れませんでした — もう一度。',
   'assistant.micFail': 'マイクを開始できませんでした。',
+
+  'tutorial.help': 'ガイド',
+  'tutorial.eyebrow': 'ステップ {step} / {total}',
+  'tutorial.next': '次へ',
+  'tutorial.back': '戻る',
+  'tutorial.skip': 'スキップ',
+  'tutorial.start': '最初の圃場を追加',
+  'tutorial.welcome.title': 'SAKIYAへようこそ',
+  'tutorial.welcome.body':
+    'この短いガイドで使い方を説明します。大きなボタンと少ない手順です。ゆっくり進めてください。',
+  'tutorial.sites.title': '1. 圃場を保存',
+  'tutorial.sites.body':
+    '「圃場」を開きます。地図で区画の輪郭を描き、作物と土壌を入れて保存します。',
+  'tutorial.analysis.title': '2. 作物の健康を確認',
+  'tutorial.analysis.body':
+    '「分析」を開きます。圃場を選びスキャンして、衛星画像の緑度を見ます。',
+  'tutorial.water.title': '3. 水を見守る',
+  'tutorial.water.body':
+    '「水ガード」で灌漑中の漏れや無駄を見つけます。',
+  'tutorial.cutsheet.title': '4. 地形を見る',
+  'tutorial.cutsheet.body':
+    '「地形LiDAR」で傾斜や土地の形を確認 — 排水や雨水利用に役立ちます。',
+  'tutorial.assistant.title': '5. いつでも質問',
+  'tutorial.assistant.body':
+    '右下のアシスタントボタンを押すと、圃場についてやさしい言葉で質問できます。',
+  'tutorial.done.title': '準備完了',
+  'tutorial.done.body':
+    'まずは「圃場」で最初の区画を描いて保存しましょう。メニューの「ガイド」からいつでも再生できます。',
 };
 
 export const dictionaries: Record<Locale, Dict> = { en, ar, ja };

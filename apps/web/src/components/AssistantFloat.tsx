@@ -78,6 +78,7 @@ export default function AssistantFloat() {
         <button
           type="button"
           className="assistant-fab"
+          data-tour="assistant-fab"
           onClick={() => setOpen(true)}
           aria-label={t('assistant.open')}
           title={t('assistant.title')}

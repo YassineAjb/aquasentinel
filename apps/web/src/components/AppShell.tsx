@@ -1,4 +1,4 @@
-import { useEffect, useState, type ComponentType } from 'react';
+import { useCallback, useEffect, useState, type ComponentType } from 'react';
 import {
   ChartSpline,
   LayoutDashboard,
@@ -14,6 +14,10 @@ import {
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import AssistantFloat from './AssistantFloat';
+import FirstRunTutorial, {
+  TutorialHelpButton,
+  useTutorialGate,
+} from './FirstRunTutorial';
 import FlagIcon from './FlagIcon';
 import { LOCALES, useLanguage, type Locale } from '../i18n';
 import { useTheme } from '../theme';
@@ -34,11 +38,21 @@ const NAV: {
 
 const STORAGE_KEY = 'sakiya-nav-collapsed';
 
+const TOUR_TARGETS: Record<string, string> = {
+  '/dashboard': 'nav-dashboard',
+  '/sites': 'nav-sites',
+  '/analysis': 'nav-analysis',
+  '/waterguard': 'nav-waterguard',
+  '/cutsheetrx': 'nav-cutsheetrx',
+};
+
 export default function AppShell() {
   const { t, locale, setLocale } = useLanguage();
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { open: tourOpen, setOpen: setTourOpen, start: startTour } =
+    useTutorialGate();
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(STORAGE_KEY) === '1';
@@ -54,6 +68,8 @@ export default function AppShell() {
       /* ignore */
     }
   }, [collapsed]);
+
+  const expandNav = useCallback(() => setCollapsed(false), []);
 
   return (
     <div className={`app-shell${collapsed ? ' nav-collapsed' : ''}`}>
@@ -103,6 +119,7 @@ export default function AppShell() {
                 to={to}
                 className="app-nav-link"
                 title={label}
+                data-tour={TOUR_TARGETS[to]}
               >
                 <Icon
                   className="app-nav-icon"
@@ -115,7 +132,12 @@ export default function AppShell() {
             );
           })}
         </nav>
-        <div className="app-lang" role="group" aria-label={t('nav.language')}>
+        <div
+          className="app-lang"
+          role="group"
+          aria-label={t('nav.language')}
+          data-tour="nav-language"
+        >
           {LOCALES.map((l) => (
             <button
               key={l.id}
@@ -151,6 +173,7 @@ export default function AppShell() {
               {!collapsed && <span>{t('nav.themeDark')}</span>}
             </button>
           </div>
+          <TutorialHelpButton onClick={startTour} />
           {(user || !collapsed) && (
             <button
               type="button"
@@ -175,6 +198,11 @@ export default function AppShell() {
         <Outlet />
         <AssistantFloat />
       </div>
+      <FirstRunTutorial
+        open={tourOpen}
+        onOpenChange={setTourOpen}
+        onExpandNav={expandNav}
+      />
     </div>
   );
 }
