@@ -1403,7 +1403,7 @@ h2 {
 
 }
 
-/* ÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâ RainCatch (map-first) ÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâ */
+/* ÃÂÃÂÃÂÃÂÃÂÃ¢ÂÂÃÂÃÂ¢ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂ¬ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃÂÃÂÃÂÃÂÃ¢ÂÂÃÂÃÂ¢ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂ¬ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂ RainCatch (map-first) ÃÂÃÂÃÂÃÂÃÂÃ¢ÂÂÃÂÃÂ¢ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂ¬ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃÂÃÂÃÂÃÂÃ¢ÂÂÃÂÃÂ¢ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂ¬ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂ */
 .rc-stage {
   position: relative;
   flex: 1;
@@ -1942,7 +1942,7 @@ h2 {
   }
 }
 
-/* ÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâ CutSheetRX webview ÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâÃÆÃÆÃâÃÂ¢ÃÆÃâÃâÃâ¬ÃÆÃâÃâÃâ */
+/* ÃÂÃÂÃÂÃÂÃÂÃ¢ÂÂÃÂÃÂ¢ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂ¬ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃÂÃÂÃÂÃÂÃ¢ÂÂÃÂÃÂ¢ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂ¬ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂ CutSheetRX webview ÃÂÃÂÃÂÃÂÃÂÃ¢ÂÂÃÂÃÂ¢ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂ¬ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃÂÃÂÃÂÃÂÃ¢ÂÂÃÂÃÂ¢ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂ¬ÃÂÃÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃ¢ÂÂ */
 .csrx-stage {
   flex: 1;
   min-height: 0;
@@ -1967,7 +1967,7 @@ h2 {
   background: #111;
 }
 
-/* Cover host title only — aligned to their drawer (top/left 12px, width 310px) */
+/* Cover host title only â aligned to their drawer (top/left 12px, width 310px) */
 .csrx-brand-cover {
   position: absolute;
   top: 13px;
@@ -2016,6 +2016,7 @@ h2 {
   right: 3.6rem;
   z-index: 5;
   display: flex;
+  align-items: center;
   gap: 0.4rem;
   padding: 0.3rem;
   border-radius: 12px;
@@ -2023,6 +2024,59 @@ h2 {
   background: rgba(12, 16, 14, 0.82);
   backdrop-filter: blur(12px);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.csrx-site-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0.35rem 0.15rem 0.55rem;
+  border-radius: 9px;
+  border: 1px solid rgba(47, 158, 68, 0.35);
+  background: rgba(47, 158, 68, 0.12);
+  color: #c8ecc8;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.csrx-site-select select {
+  max-width: 11rem;
+  border: 0;
+  border-radius: 6px;
+  background: #121612;
+  color: #eef2ef;
+  padding: 0.35rem 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.csrx-sites-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 1.25rem;
+  z-index: 5;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(12, 16, 14, 0.88);
+  backdrop-filter: blur(12px);
+  color: #d7ddd8;
+  font-size: 0.85rem;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.csrx-sites-hint p {
+  margin: 0;
 }
 
 .csrx-dock-btn {
@@ -2099,7 +2153,7 @@ h2 {
   }
 }
 
-/* ÃÆÃÂ¢ÃâÃâ¬ÃâÃâÃÆÃÂ¢ÃâÃâ¬ÃâÃâ Field assistant (centered liquid glass) ÃÆÃÂ¢ÃâÃâ¬ÃâÃâÃÆÃÂ¢ÃâÃâ¬ÃâÃâ */
+/* ÃÂÃÂÃÂÃÂ¢ÃÂÃ¢ÂÂÃÂÃ¢ÂÂ¬ÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃÂÃÂÃÂ¢ÃÂÃ¢ÂÂÃÂÃ¢ÂÂ¬ÃÂÃ¢ÂÂÃÂÃ¢ÂÂ Field assistant (centered liquid glass) ÃÂÃÂÃÂÃÂ¢ÃÂÃ¢ÂÂÃÂÃ¢ÂÂ¬ÃÂÃ¢ÂÂÃÂÃ¢ÂÂÃÂÃÂÃÂÃÂ¢ÃÂÃ¢ÂÂÃÂÃ¢ÂÂ¬ÃÂÃ¢ÂÂÃÂÃ¢ÂÂ */
 .assistant-fab {
   position: fixed;
   right: 1.15rem;

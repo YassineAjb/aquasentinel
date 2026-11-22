@@ -152,6 +152,9 @@ const en: Dict = {
   'csrx.open': 'Open',
   'csrx.tag': 'Terrain · LiDAR',
   'csrx.controls': 'Embed controls',
+  'csrx.site': 'Field',
+  'csrx.noSites': 'No saved fields — draw one on Sites first.',
+  'csrx.goSites': 'Go to Sites',
   'csrx.fallbackTitle': 'Couldn’t load the embed',
   'csrx.fallbackBody':
     'The host may block framing. Open the tool in a new tab instead.',
@@ -325,6 +328,9 @@ const ar: Dict = {
   'csrx.open': 'فتح',
   'csrx.tag': 'تضاريس · LiDAR',
   'csrx.controls': 'عناصر التحكم',
+  'csrx.site': 'الحقل',
+  'csrx.noSites': 'لا حقول محفوظة — ارسم واحداً في الحقول أولاً.',
+  'csrx.goSites': 'إلى الحقول',
   'csrx.fallbackTitle': 'تعذّر تحميل الأداة',
   'csrx.fallbackBody':
     'قد يمنع المضيف التضمين. افتح الأداة في تبويب جديد.',
@@ -498,6 +504,9 @@ const ja: Dict = {
   'csrx.open': '開く',
   'csrx.tag': '地形 · LiDAR',
   'csrx.controls': '埋め込み操作',
+  'csrx.site': '圃場',
+  'csrx.noSites': '保存済みの圃場がありません — 先に圃場ページで描いてください。',
+  'csrx.goSites': '圃場へ',
   'csrx.fallbackTitle': '埋め込みを読み込めませんでした',
   'csrx.fallbackBody':
     'ホストがフレーム埋め込みを拒否している可能性があります。新しいタブで開いてください。',
