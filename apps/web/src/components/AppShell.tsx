@@ -9,9 +9,11 @@ import {
   PanelLeftClose,
   ShieldAlert,
   Sun,
+  ZoomIn,
   type LucideProps,
 } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useAccessibility } from '../a11y';
 import { useAuth } from '../auth';
 import AssistantFloat from './AssistantFloat';
 import FirstRunTutorial, {
@@ -49,6 +51,7 @@ const TOUR_TARGETS: Record<string, string> = {
 export default function AppShell() {
   const { t, locale, setLocale } = useLanguage();
   const { theme, setTheme } = useTheme();
+  const { a11y, toggleA11y } = useAccessibility();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { open: tourOpen, setOpen: setTourOpen, start: startTour } =
@@ -173,6 +176,17 @@ export default function AppShell() {
               {!collapsed && <span>{t('nav.themeDark')}</span>}
             </button>
           </div>
+          <button
+            type="button"
+            className={`app-lang-btn app-a11y-btn${a11y ? ' is-active' : ''}`}
+            aria-pressed={a11y}
+            title={a11y ? t('nav.a11yOn') : t('nav.a11yOff')}
+            aria-label={a11y ? t('nav.a11yOn') : t('nav.a11yOff')}
+            onClick={toggleA11y}
+          >
+            <ZoomIn size={15} strokeWidth={2} aria-hidden />
+            {!collapsed && <span>{t('nav.a11y')}</span>}
+          </button>
           <TutorialHelpButton onClick={startTour} />
           {(user || !collapsed) && (
             <button

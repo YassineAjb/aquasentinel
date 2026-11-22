@@ -9,6 +9,8 @@
   --nav-w: 220px;
   width: var(--nav-w);
   flex-shrink: 0;
+  align-self: stretch;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -19,7 +21,9 @@
   border-right: 1px solid var(--line);
   z-index: 5;
   transition: width 0.22s ease, padding 0.22s ease, background 0.2s ease;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .app-shell.nav-collapsed .app-nav {
@@ -32,6 +36,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.35rem;
+  flex-shrink: 0;
 }
 
 .app-nav-brand {
@@ -139,6 +144,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  /* Do not shrink below content — avoids links painting over .app-lang */
+  flex: 0 0 auto;
 }
 
 .app-nav-link {
@@ -183,11 +190,15 @@
 
 .app-lang {
   margin-top: auto;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   padding-top: 0.5rem;
   border-top: 1px solid var(--line);
+  background: var(--bg-nav);
+  position: relative;
+  z-index: 1;
 }
 
 .app-lang-btn {
@@ -5133,10 +5144,14 @@ h2 {
   color: var(--faint);
 }
 
-/* ── First-run tutorial (farmer-friendly) ── */
+/* ââ First-run tutorial (farmer-friendly) ââ */
 .tour-target-live {
   z-index: 1500 !important;
   pointer-events: none !important;
+}
+
+.app-nav-link.tour-target-live,
+.app-lang.tour-target-live {
   position: relative;
 }
 
@@ -5335,6 +5350,11 @@ h2 {
   width: 100%;
 }
 
+.app-a11y-btn {
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
 .app-shell.nav-collapsed .app-help-label {
   display: none;
 }
@@ -5370,7 +5390,7 @@ html[dir='rtl'] .tour-card-center {
     max-width: none;
   }
 
-  /* Default: tip near bottom — but not when highlighting the assistant FAB */
+  /* Default: tip near bottom â but not when highlighting the assistant FAB */
   .tour-card-anchored:not(.tour-card-above-fab) {
     bottom: 12px;
     top: auto !important;

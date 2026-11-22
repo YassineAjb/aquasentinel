@@ -164,3 +164,144 @@ select:focus {
   image-rendering: auto !important;
   filter: saturate(1.15) contrast(1.05);
 }
+
+/* ── Accessibility / Easy-read mode ── */
+html[data-a11y='on'] {
+  --a11y-scale: 1.22;
+  --radius: 14px;
+  font-size: 112.5%; /* ~18px root → larger rem-based UI */
+}
+
+html[data-a11y='on'][data-theme='dark'] {
+  --text: #ffffff;
+  --muted: #d5ebe0;
+  --faint: #b7d0c3;
+  --line: rgba(149, 213, 178, 0.45);
+  --bg-hover: rgba(255, 255, 255, 0.1);
+  --bg-hover-strong: rgba(255, 255, 255, 0.14);
+  --accent: #74c69d;
+}
+
+html[data-a11y='on'][data-theme='light'] {
+  --text: #0d2818;
+  --muted: #1b4332;
+  --faint: #2d6a4f;
+  --line: rgba(27, 67, 50, 0.28);
+  --bg-hover: rgba(27, 67, 50, 0.08);
+  --bg-hover-strong: rgba(27, 67, 50, 0.12);
+  --accent: #2d6a4f;
+}
+
+html[data-a11y='on'] body {
+  letter-spacing: 0.01em;
+  line-height: 1.55;
+}
+
+html[data-a11y='on'] button,
+html[data-a11y='on'] .app-nav-link,
+html[data-a11y='on'] a.primary,
+html[data-a11y='on'] .primary {
+  min-height: 3rem;
+  font-size: 1.05rem;
+}
+
+/* Sidebar chrome: readable but compact enough to fit the viewport */
+html[data-a11y='on'] .app-nav {
+  --nav-w: 248px;
+  gap: 0.85rem;
+  padding-bottom: 1.5rem;
+}
+
+html[data-a11y='on'] .app-nav-link {
+  min-height: 2.85rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 1.02rem;
+  gap: 0.7rem;
+}
+
+html[data-a11y='on'] .app-nav-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+html[data-a11y='on'] .app-lang-btn,
+html[data-a11y='on'] .app-theme-btn {
+  min-height: 2.55rem;
+  font-size: 0.95rem;
+  padding: 0.5rem 0.65rem;
+}
+
+html[data-a11y='on'] input,
+html[data-a11y='on'] select,
+html[data-a11y='on'] textarea {
+  min-height: 3rem;
+  font-size: 1.1rem;
+  padding: 0.75rem 0.95rem;
+  border-width: 2px;
+}
+
+html[data-a11y='on'] input:focus,
+html[data-a11y='on'] select:focus,
+html[data-a11y='on'] textarea:focus,
+html[data-a11y='on'] button:focus-visible,
+html[data-a11y='on'] a:focus-visible,
+html[data-a11y='on'] .app-nav-link:focus-visible {
+  outline: 3px solid var(--aqua);
+  outline-offset: 3px;
+}
+
+html[data-a11y='on'] h1 {
+  font-size: clamp(1.85rem, 4vw, 2.35rem) !important;
+  line-height: 1.2;
+}
+
+html[data-a11y='on'] h2 {
+  font-size: clamp(1.35rem, 3vw, 1.7rem) !important;
+}
+
+html[data-a11y='on'] .sub,
+html[data-a11y='on'] .hint,
+html[data-a11y='on'] p {
+  font-size: 1.08rem;
+  line-height: 1.55;
+}
+
+html[data-a11y='on'] .dash-stat strong,
+html[data-a11y='on'] .dash-next-card strong {
+  font-size: 1.25rem;
+}
+
+html[data-a11y='on'] .dash-next-card {
+  padding: 1.15rem 1.1rem;
+  gap: 0.55rem;
+}
+
+html[data-a11y='on'] .tour-card h2 {
+  font-size: clamp(1.6rem, 3.5vw, 2rem);
+}
+
+html[data-a11y='on'] .tour-body {
+  font-size: 1.2rem;
+}
+
+html[data-a11y='on'] .tour-btn {
+  min-height: 3.25rem;
+  font-size: 1.12rem;
+}
+
+/* Calm motion: keep short UI feedback, drop looping decoration */
+html[data-a11y='on'] .assistant-fab::before,
+html[data-a11y='on'] .assistant-cursor {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

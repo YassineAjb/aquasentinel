@@ -29,6 +29,9 @@ const en: Dict = {
   'nav.theme': 'Theme',
   'nav.themeLight': 'Light',
   'nav.themeDark': 'Dark',
+  'nav.a11y': 'Easy read',
+  'nav.a11yOn': 'Easy read on',
+  'nav.a11yOff': 'Easy read off',
   'brand.tag': 'Water · energy · agriculture',
 
   'auth.loginEyebrow': 'Welcome back',
@@ -315,6 +318,9 @@ const ar: Dict = {
   'nav.theme': 'المظهر',
   'nav.themeLight': 'فاتح',
   'nav.themeDark': 'داكن',
+  'nav.a11y': 'قراءة سهلة',
+  'nav.a11yOn': 'القراءة السهلة مفعّلة',
+  'nav.a11yOff': 'القراءة السهلة متوقفة',
   'brand.tag': 'ماء · طاقة · زراعة',
 
   'auth.loginEyebrow': 'مرحباً بعودتك',
@@ -601,6 +607,9 @@ const ja: Dict = {
   'nav.theme': 'テーマ',
   'nav.themeLight': 'ライト',
   'nav.themeDark': 'ダーク',
+  'nav.a11y': '読みやすく',
+  'nav.a11yOn': '読みやすくオン',
+  'nav.a11yOff': '読みやすくオフ',
   'brand.tag': '水 · エネルギー · 農業',
 
   'auth.loginEyebrow': 'おかえりなさい',
