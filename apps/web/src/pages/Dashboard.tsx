@@ -78,7 +78,6 @@ export default function Dashboard() {
   return (
     <div className="dash-page">
       <header className="dash-hero">
-        <p className="eyebrow">{t('dash.eyebrow')}</p>
         <h1>{t('dash.title')}</h1>
         <p className="sub">{status}</p>
       </header>
@@ -91,30 +90,6 @@ export default function Dashboard() {
         <div className="dash-stat">
           <strong>{busy ? '—' : totalScans}</strong>
           <span>{t('dash.scans')}</span>
-        </div>
-        <div className="dash-actions">
-          <Link className="primary inline" to="/sites">
-            {t('dash.manageSites')}
-          </Link>
-          <Link className="ghost inline" to="/analysis">
-            {t('dash.openAnalysis')}
-          </Link>
-          <button
-            className="ghost"
-            type="button"
-            onClick={async () => {
-              try {
-                const demo = (await fetch('/demo.json').then((r) =>
-                  r.json(),
-                )) as { siteId: string };
-                navigate(`/analysis/${demo.siteId}`);
-              } catch {
-                setStatus(t('dash.demoMissing'));
-              }
-            }}
-          >
-            {t('dash.loadDemo')}
-          </button>
         </div>
       </div>
 

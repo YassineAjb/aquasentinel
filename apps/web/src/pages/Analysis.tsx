@@ -1,5 +1,33 @@
-import { useEffect, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { Link, useParams } from 'react-router-dom';
+import {
+  AlertTriangle,
+  CalendarDays,
+  Cloud,
+  CloudRain,
+  CloudSun,
+  Droplets,
+  FileText,
+  Gauge,
+  GitCompareArrows,
+  GripVertical,
+  History,
+  ImageOff,
+  Leaf,
+  RefreshCw,
+  Satellite,
+  Sparkles,
+  Sprout,
+  Thermometer,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react';
 import {
   api,
   observationImageUrl,
@@ -13,6 +41,8 @@ import FieldMap from '../components/FieldMap';
 
 const LOW_COVERAGE = 70;
 type SceneVisual = 'original' | 'enhanced';
+type AnalysisTab = 'scene' | 'weather' | 'water' | 'history';
+type DockPos = { x: number; y: number };
 
 function fmtNdvi(v?: number | null) {
   return v == null ? '—' : v.toFixed(4);
@@ -29,13 +59,63 @@ function fmtC(v?: number | null) {
 function coverageWarn(obs: Observation) {
   const pct = obs.stats?.validPct;
   if (pct != null && pct < LOW_COVERAGE) {
-    return `Coverage too low (${pct.toFixed(1)}% < ${LOW_COVERAGE}%)`;
+    return `Not enough clear pixels (${pct.toFixed(1)}% usable — need ${LOW_COVERAGE}%+)`;
   }
   return null;
 }
 
+function StatRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: ReactNode;
+}) {
+  return (
+    <div className="stat">
+      <span className="stat-label">
+        <Icon size={14} strokeWidth={2} aria-hidden />
+        {label}
+      </span>
+      <span>{value}</span>
+    </div>
+  );
+}
+
+function EmptyHint({
+  icon: Icon,
+  title,
+  text,
+}: {
+  icon: LucideIcon;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="empty-block empty-block-icon">
+      <Icon size={22} strokeWidth={1.75} aria-hidden />
+      <p>{title}</p>
+      <span>{text}</span>
+    </div>
+  );
+}
+
 export default function Analysis() {
   const { siteId } = useParams<{ siteId: string }>();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    origX: number;
+    origY: number;
+  } | null>(null);
+  const [dockPos, setDockPos] = useState<DockPos | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [tab, setTab] = useState<AnalysisTab>('scene');
   const [site, setSite] = useState<Site | null>(null);
   const [observation, setObservation] = useState<Observation | null>(null);
   const [observations, setObservations] = useState<Observation[]>([]);
@@ -48,6 +128,66 @@ export default function Analysis() {
   const [statusKind, setStatusKind] = useState<'ok' | 'busy' | 'error' | ''>(
     'busy',
   );
+
+  const clampDockPos = useCallback((x: number, y: number): DockPos => {
+    const root = rootRef.current;
+    const dock = dockRef.current;
+    if (!root || !dock) return { x, y };
+    const pad = 8;
+    const maxX = Math.max(pad, root.clientWidth - dock.offsetWidth - pad);
+    const maxY = Math.max(pad, root.clientHeight - dock.offsetHeight - pad);
+    return {
+      x: Math.min(maxX, Math.max(pad, x)),
+      y: Math.min(maxY, Math.max(pad, y)),
+    };
+  }, []);
+
+  function onDockPointerDown(e: React.PointerEvent<HTMLElement>) {
+    if (e.button !== 0) return;
+    const dock = dockRef.current;
+    const root = rootRef.current;
+    if (!dock || !root) return;
+    const rect = dock.getBoundingClientRect();
+    const rootRect = root.getBoundingClientRect();
+    const origX = rect.left - rootRect.left;
+    const origY = rect.top - rootRect.top;
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX,
+      origY,
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDragging(true);
+    setDockPos({ x: origX, y: origY });
+  }
+
+  function onDockPointerMove(e: React.PointerEvent<HTMLElement>) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    setDockPos(
+      clampDockPos(
+        drag.origX + (e.clientX - drag.startX),
+        drag.origY + (e.clientY - drag.startY),
+      ),
+    );
+  }
+
+  function onDockPointerUp(e: React.PointerEvent<HTMLElement>) {
+    if (dragRef.current?.pointerId !== e.pointerId) return;
+    dragRef.current = null;
+    setDragging(false);
+  }
+
+  useEffect(() => {
+    if (!dockPos) return;
+    const onResize = () => {
+      setDockPos((pos) => (pos ? clampDockPos(pos.x, pos.y) : pos));
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [dockPos, clampDockPos]);
   const [weather, setWeather] = useState<WeatherSeries | null>(null);
   const [weatherError, setWeatherError] = useState('');
   const [weatherBusy, setWeatherBusy] = useState(false);
@@ -262,520 +402,722 @@ export default function Analysis() {
   }
 
   return (
-    <div className="layout">
-      <aside className="sidebar">
-        <header className="sidebar-hero">
-          <p className="crumb">
-            <Link to="/sites">Sites</Link>
-            <span aria-hidden> / </span>
-            <Link to="/analysis">Analysis</Link>
-          </p>
-          <h1>{site?.name || 'Analysis'}</h1>
-          <p className="sub">
-            Run the newest clear scene, then compare dates when you have history.
-          </p>
+    <div className="map-workspace" ref={rootRef}>
+      <FieldMap
+        editable={false}
+        boundary={site?.boundary || null}
+        ndvi={ndvi}
+      />
+
+      <div
+        className={`float-dock${dragging ? ' is-dragging' : ''}${dockPos ? ' is-placed' : ''}`}
+        ref={dockRef}
+        style={
+          dockPos
+            ? { left: dockPos.x, top: dockPos.y, right: 'auto' }
+            : undefined
+        }
+      >
+        <header
+          className="float-dock-head"
+          onPointerDown={onDockPointerDown}
+          onPointerMove={onDockPointerMove}
+          onPointerUp={onDockPointerUp}
+          onPointerCancel={onDockPointerUp}
+        >
+          <div className="float-dock-drag">
+            <GripVertical
+              className="float-dock-grip-icon"
+              size={18}
+              strokeWidth={2}
+              aria-hidden
+            />
+            <div>
+              <p className="crumb">
+                <Link to="/sites">Sites</Link>
+                <span aria-hidden> / </span>
+                <Link to="/analysis">Analysis</Link>
+              </p>
+              <h1>{site?.name || 'Analysis'}</h1>
+            </div>
+          </div>
+          <p className={`float-dock-status ${statusKind || 'idle'}`}>{status}</p>
         </header>
 
-        <div className={`status-banner ${statusKind || 'idle'}`}>{status}</div>
+        <div className="float-dock-actions">
+          <button
+            className="primary"
+            type="button"
+            disabled={!site}
+            onClick={() => runScan(false)}
+          >
+            <Satellite size={15} strokeWidth={2} aria-hidden />
+            Scan now
+          </button>
+          <button
+            className="ghost"
+            type="button"
+            disabled={!site}
+            onClick={() => runScan(true)}
+            title="Fetch an earlier clear day you have not scanned yet"
+          >
+            <History size={15} strokeWidth={2} aria-hidden />
+            Earlier day
+          </button>
+        </div>
 
-        <section className="panel composer">
-          <div className="panel-head">
-            <h2>Scan</h2>
-          </div>
-          <div className="actions stack">
+        <div className="float-dock-tabs" role="tablist">
+          {(
+            [
+              ['scene', 'Crop view'],
+              ['weather', 'Conditions'],
+              ['water', 'Irrigation'],
+              ['history', 'Past scans'],
+            ] as const
+          ).map(([id, label]) => (
             <button
-              className="primary"
+              key={id}
               type="button"
-              disabled={!site}
-              onClick={() => runScan(false)}
+              role="tab"
+              aria-selected={tab === id}
+              className={tab === id ? 'active' : ''}
+              onClick={() => setTab(id)}
             >
-              Scan latest
+              {label}
             </button>
-            <button
-              className="ghost"
-              type="button"
-              disabled={!site}
-              onClick={() => runScan(true)}
-              title="Exclude scenes already saved for this site"
-            >
-              Scan older date
-            </button>
-          </div>
-        </section>
+          ))}
+        </div>
 
-        {observation && (
-          <section className="panel">
-            <div className="panel-head">
-              <h2>Latest result</h2>
-            </div>
-            <div className="stat">
-              <span>Acquired</span>
-              <span>{observation.acquiredAt || '—'}</span>
-            </div>
-            <div className="stat">
-              <span>Cloud</span>
-              <span>
-                {observation.cloudCover != null
-                  ? `${observation.cloudCover}%`
-                  : '—'}
-              </span>
-            </div>
-            <div className="stat">
-              <span>Avg NDVI</span>
-              <span>{fmtNdvi(observation.stats?.mean)}</span>
-            </div>
-            <div className="stat">
-              <span>Min / Max</span>
-              <span>
-                {fmtNdvi(observation.stats?.min)} /{' '}
-                {fmtNdvi(observation.stats?.max)}
-              </span>
-            </div>
-            <div className="legend">
-              <span className="legend-label">NDVI legend (unitless −1…1)</span>
-              <div className="legend-bar" aria-hidden />
-              <div className="legend-ticks">
-                <span>low / sparse</span>
-                <span>0.2</span>
-                <span>0.4</span>
-                <span>dense</span>
-              </div>
-            </div>
-            {coverageWarn(observation) && (
-              <p className="status error">{coverageWarn(observation)}</p>
-            )}
-            {site && (
-              <div className="visual-compare">
-                <div className="visual-head">
-                  <span className="legend-label">Scene visual</span>
-                  <span className="derived-badge">DERIVED VISUAL</span>
-                </div>
-                <div className="layer-toggle">
-                  <button
-                    type="button"
-                    className={`chip ${sceneVisual === 'original' ? 'active' : ''}`}
-                    onClick={() => setSceneVisual('original')}
-                  >
-                    Original S2
-                  </button>
-                  <button
-                    type="button"
-                    className={`chip ${sceneVisual === 'enhanced' ? 'active' : ''}`}
-                    onClick={() => setSceneVisual('enhanced')}
-                  >
-                    Enhanced view
-                  </button>
-                </div>
-                <img
-                  className={
-                    sceneVisual === 'enhanced'
-                      ? 'scene-thumb enhanced'
-                      : 'scene-thumb'
-                  }
-                  src={observationImageUrl(
-                    site._id,
-                    observation._id,
-                    'truecolor',
-                    sceneVisual,
-                  )}
-                  alt="Sentinel-2 true color derived visual"
+        <div className="float-dock-body">
+          {tab === 'scene' && (
+            <section className="panel">
+              {!observation ? (
+                <EmptyHint
+                  icon={ImageOff}
+                  title="No crop scan yet"
+                  text="Press Scan now to fetch the clearest recent satellite image for this field."
                 />
-                <p className="hint">
-                  Same scene as NDVI. Enhanced = display sharpening only.
-                </p>
-              </div>
-            )}
-          </section>
-        )}
-
-        {observation?.acquiredAt && (
-          <section className="panel">
-            <div className="panel-head">
-              <h2>Weather</h2>
-              <button
-                className="text-btn"
-                type="button"
-                disabled={!siteId || weatherBusy}
-                onClick={async () => {
-                  if (!siteId || !observation.acquiredAt) return;
-                  try {
-                    setWeatherBusy(true);
-                    const series = await api.refreshWeather(siteId, {
-                      around: observation.acquiredAt,
-                    });
-                    setWeather(series);
-                    setWeatherError('');
-                  } catch (err) {
-                    setWeatherError(
-                      err instanceof Error ? err.message : 'Refresh failed',
-                    );
-                  } finally {
-                    setWeatherBusy(false);
-                  }
-                }}
-              >
-                {weatherBusy ? 'Fetching…' : 'Refresh'}
-              </button>
-            </div>
-            {weatherError && <p className="status error">{weatherError}</p>}
-            {weather?.sceneDay && (
-              <>
-                <div className="stat">
-                  <span>Rain (scene day)</span>
-                  <span>{fmtMm(weather.sceneDay.precipMm)}</span>
-                </div>
-                <div className="stat">
-                  <span>Temp mean / max</span>
-                  <span>
-                    {fmtC(weather.sceneDay.tempMeanC)} /{' '}
-                    {fmtC(weather.sceneDay.tempMaxC)}
-                  </span>
-                </div>
-                <div className="stat">
-                  <span>ET₀ (FAO)</span>
-                  <span>{fmtMm(weather.sceneDay.et0Mm)}</span>
-                </div>
-              </>
-            )}
-            {weather && weather.days.length > 0 && (
-              <div className="weather-strip" aria-label="7-day weather context">
-                {weather.days.map((d) => {
-                  const active = d.date === weather.sceneDay?.date;
-                  const rain = d.precipMm ?? 0;
-                  const height = Math.min(100, Math.round((rain / 12) * 100));
-                  return (
-                    <div
-                      key={d.date}
-                      className={`weather-day${active ? ' active' : ''}`}
-                      title={`${d.date}: ${fmtMm(d.precipMm)}, ${fmtC(d.tempMeanC)}`}
-                    >
-                      <div className="weather-bar-wrap">
-                        <div
-                          className="weather-bar"
-                          style={{ height: `${Math.max(height, rain > 0 ? 8 : 2)}%` }}
-                        />
-                      </div>
-                      <span className="weather-day-label">
-                        {d.date.slice(5)}
-                      </span>
+              ) : (
+                <>
+                  <div className="panel-head">
+                    <h2 className="panel-title-icon">
+                      <Leaf size={14} strokeWidth={2} aria-hidden />
+                      How green is the crop?
+                    </h2>
+                  </div>
+                  <StatRow
+                    icon={CalendarDays}
+                    label="Scan date"
+                    value={observation.acquiredAt || '—'}
+                  />
+                  <StatRow
+                    icon={Cloud}
+                    label="Cloud cover"
+                    value={
+                      observation.cloudCover != null
+                        ? `${observation.cloudCover}%`
+                        : '—'
+                    }
+                  />
+                  <StatRow
+                    icon={Sprout}
+                    label="Plant greenness"
+                    value={fmtNdvi(observation.stats?.mean)}
+                  />
+                  <StatRow
+                    icon={Gauge}
+                    label="Lowest / highest"
+                    value={
+                      <>
+                        {fmtNdvi(observation.stats?.min)} /{' '}
+                        {fmtNdvi(observation.stats?.max)}
+                      </>
+                    }
+                  />
+                  <div className="legend">
+                    <span className="legend-label">
+                      Greenness scale (NDVI)
+                    </span>
+                    <div className="legend-bar" aria-hidden />
+                    <div className="legend-ticks">
+                      <span>sparse</span>
+                      <span>0.2</span>
+                      <span>0.4</span>
+                      <span>lush</span>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-            <p className="hint">
-              {weather?.source || 'Open-Meteo'} · cached for later · context
-              only — not a drought diagnosis
-            </p>
-          </section>
-        )}
-
-        <section className="panel">
-          <div className="panel-head">
-            <h2>Irrigation advisor</h2>
-            <button
-              className="text-btn"
-              type="button"
-              disabled={!siteId || irrigationBusy}
-              onClick={async () => {
-                if (!siteId) return;
-                try {
-                  setIrrigationBusy(true);
-                  setIrrigationError('');
-                  const plan = await api.irrigationPlan(
-                    siteId,
-                    observation?._id,
-                  );
-                  setIrrigation(plan);
-                  setStatus('Irrigation plan ready.');
-                  setStatusKind('ok');
-                } catch (err) {
-                  setIrrigation(null);
-                  setIrrigationError(
-                    err instanceof Error ? err.message : 'Plan failed',
-                  );
-                  setStatusKind('error');
-                } finally {
-                  setIrrigationBusy(false);
-                }
-              }}
-            >
-              {irrigationBusy ? 'Planning…' : 'Plan irrigation'}
-            </button>
-          </div>
-          {site && (
-            <p className="hint tight">
-              Profile:{' '}
-              {site.plantType && site.plantAge && site.soilType
-                ? `${site.plantType} · ${site.plantAge} · ${site.soilType}`
-                : 'incomplete — set type plante / âge / terre on Sites'}
-            </p>
-          )}
-          {irrigationError && (
-            <p className="status error">{irrigationError}</p>
-          )}
-          {irrigation && (
-            <>
-              <div className="stat">
-                <span>ETc (est.)</span>
-                <span>{irrigation.estimate.etcMmPerDay} mm/day</span>
-              </div>
-              <div className="stat">
-                <span>7-day need</span>
-                <span>
-                  {irrigation.estimate.need7Mm} mm ·{' '}
-                  {irrigation.estimate.need7M3} m³
-                </span>
-              </div>
-              <div className="stat">
-                <span>Pulse</span>
-                <span>
-                  ~{irrigation.estimate.perEventMm} mm /{' '}
-                  {irrigation.estimate.intervalDays}d
-                </span>
-              </div>
-              <p className="compare">{irrigation.narrative.text}</p>
-              <ul className="schedule-list">
-                {irrigation.schedule.map((row) => (
-                  <li key={row.date} className={`sched-${row.action}`}>
-                    <strong>{row.date}</strong>
-                    <span>
-                      {row.action}
-                      {row.volumeMm > 0
-                        ? ` · ${row.volumeMm} mm (${row.volumeM3} m³)`
-                        : ''}
-                    </span>
-                    <em>{row.reason}</em>
-                  </li>
-                ))}
-              </ul>
-              <p className="hint">
-                {irrigation.label} · narrative via {irrigation.narrative.source}
-              </p>
-              <p className="hint">{irrigation.honesty}</p>
-
-              {irrigation.pumpWindows && (
-                <div className="pump-windows">
-                  <div className="panel-head tight">
-                    <h3>{irrigation.pumpWindows.label}</h3>
                   </div>
-                  <div className="stat">
-                    <span>Soft windows</span>
-                    <span>
-                      {irrigation.pumpWindows.summary.softWindows} · ~
-                      {irrigation.pumpWindows.summary.totalKwhEstimate} kWh
-                    </span>
-                  </div>
-                  <div className="stat">
-                    <span>vs peak (est.)</span>
-                    <span>
-                      ~{irrigation.pumpWindows.summary.totalKwhSavedVsPeak} kWh
-                      saved
-                    </span>
-                  </div>
-                  {irrigation.pumpWindows.summary.blockedByInspect && (
-                    <p className="status error">
-                      Pump advice blocked — inspect field first (NDVI flag).
-                    </p>
+                  {coverageWarn(observation) && (
+                    <p className="status error">{coverageWarn(observation)}</p>
                   )}
+                  {site && (
+                    <div className="visual-compare">
+                      <div className="visual-head">
+                        <span className="legend-label">
+                          <Satellite size={13} strokeWidth={2} aria-hidden />
+                          Field photo
+                        </span>
+                        <span className="derived-badge">From satellite</span>
+                      </div>
+                      <div className="layer-toggle">
+                        <button
+                          type="button"
+                          className={`chip ${sceneVisual === 'original' ? 'active' : ''}`}
+                          onClick={() => setSceneVisual('original')}
+                        >
+                          Natural look
+                        </button>
+                        <button
+                          type="button"
+                          className={`chip ${sceneVisual === 'enhanced' ? 'active' : ''}`}
+                          onClick={() => setSceneVisual('enhanced')}
+                        >
+                          <Sparkles size={13} strokeWidth={2} aria-hidden />
+                          Sharper look
+                        </button>
+                      </div>
+                      <img
+                        className={
+                          sceneVisual === 'enhanced'
+                            ? 'scene-thumb enhanced'
+                            : 'scene-thumb'
+                        }
+                        src={observationImageUrl(
+                          site._id,
+                          observation._id,
+                          'truecolor',
+                          sceneVisual,
+                        )}
+                        alt="Satellite true-color view of the field"
+                      />
+                      <p className="hint">
+                        Same day as the greenness map. Sharper look only
+                        improves the display — not the numbers.
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+          )}
+
+          {tab === 'weather' && (
+            <section className="panel">
+              <div className="panel-head">
+                <h2 className="panel-title-icon">
+                  <CloudSun size={14} strokeWidth={2} aria-hidden />
+                  Around the scan day
+                </h2>
+                <button
+                  className="text-btn"
+                  type="button"
+                  disabled={!siteId || !observation?.acquiredAt || weatherBusy}
+                  onClick={async () => {
+                    if (!siteId || !observation?.acquiredAt) return;
+                    try {
+                      setWeatherBusy(true);
+                      const series = await api.refreshWeather(siteId, {
+                        around: observation.acquiredAt,
+                      });
+                      setWeather(series);
+                      setWeatherError('');
+                    } catch (err) {
+                      setWeatherError(
+                        err instanceof Error
+                          ? err.message
+                          : 'Could not update weather',
+                      );
+                    } finally {
+                      setWeatherBusy(false);
+                    }
+                  }}
+                >
+                  <RefreshCw size={13} strokeWidth={2} aria-hidden />
+                  {weatherBusy ? 'Updating…' : 'Update'}
+                </button>
+              </div>
+              {!observation?.acquiredAt ? (
+                <EmptyHint
+                  icon={CloudSun}
+                  title="Need a crop scan first"
+                  text="Scan your field, then we’ll show rain and temperature around that day."
+                />
+              ) : (
+                <>
+                  {weatherError && (
+                    <p className="status error">{weatherError}</p>
+                  )}
+                  {weather?.sceneDay && (
+                    <>
+                      <StatRow
+                        icon={CloudRain}
+                        label="Rain on scan day"
+                        value={fmtMm(weather.sceneDay.precipMm)}
+                      />
+                      <StatRow
+                        icon={Thermometer}
+                        label="Air temperature"
+                        value={
+                          <>
+                            {fmtC(weather.sceneDay.tempMeanC)} avg /{' '}
+                            {fmtC(weather.sceneDay.tempMaxC)} max
+                          </>
+                        }
+                      />
+                      <StatRow
+                        icon={Sprout}
+                        label="Plant water loss"
+                        value={fmtMm(weather.sceneDay.et0Mm)}
+                      />
+                    </>
+                  )}
+                  {weather && weather.days.length > 0 && (
+                    <div
+                      className="weather-strip"
+                      aria-label="Rain over nearby days"
+                    >
+                      {weather.days.map((d) => {
+                        const active = d.date === weather.sceneDay?.date;
+                        const rain = d.precipMm ?? 0;
+                        const height = Math.min(
+                          100,
+                          Math.round((rain / 12) * 100),
+                        );
+                        return (
+                          <div
+                            key={d.date}
+                            className={`weather-day${active ? ' active' : ''}`}
+                            title={`${d.date}: ${fmtMm(d.precipMm)}, ${fmtC(d.tempMeanC)}`}
+                          >
+                            <div className="weather-bar-wrap">
+                              <div
+                                className="weather-bar"
+                                style={{
+                                  height: `${Math.max(height, rain > 0 ? 8 : 2)}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="weather-day-label">
+                              {d.date.slice(5)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <p className="hint">
+                    Nearby weather for context only — not a drought diagnosis.
+                  </p>
+                </>
+              )}
+            </section>
+          )}
+
+          {tab === 'water' && (
+            <section className="panel">
+              <div className="panel-head">
+                <h2 className="panel-title-icon">
+                  <Droplets size={14} strokeWidth={2} aria-hidden />
+                  Watering advice
+                </h2>
+                <button
+                  className="text-btn"
+                  type="button"
+                  disabled={!siteId || irrigationBusy}
+                  onClick={async () => {
+                    if (!siteId) return;
+                    try {
+                      setIrrigationBusy(true);
+                      setIrrigationError('');
+                      const plan = await api.irrigationPlan(
+                        siteId,
+                        observation?._id,
+                      );
+                      setIrrigation(plan);
+                      setStatus('Watering plan ready.');
+                      setStatusKind('ok');
+                    } catch (err) {
+                      setIrrigation(null);
+                      setIrrigationError(
+                        err instanceof Error
+                          ? err.message
+                          : 'Could not build a plan',
+                      );
+                      setStatusKind('error');
+                    } finally {
+                      setIrrigationBusy(false);
+                    }
+                  }}
+                >
+                  <Droplets size={13} strokeWidth={2} aria-hidden />
+                  {irrigationBusy ? 'Building…' : 'Make a plan'}
+                </button>
+              </div>
+              {site && (
+                <p className="hint tight">
+                  Crop profile:{' '}
+                  {site.plantType && site.plantAge && site.soilType
+                    ? `${site.plantType} · ${site.plantAge} · ${site.soilType}`
+                    : 'incomplete — add crop type, age, and soil on Sites'}
+                </p>
+              )}
+              {irrigationError && (
+                <p className="status error">{irrigationError}</p>
+              )}
+              {!irrigation && !irrigationError && (
+                <EmptyHint
+                  icon={Droplets}
+                  title="No watering plan yet"
+                  text="Tap Make a plan for a simple schedule based on your crop and recent conditions."
+                />
+              )}
+              {irrigation && (
+                <>
+                  <StatRow
+                    icon={Sprout}
+                    label="Daily crop need"
+                    value={`${irrigation.estimate.etcMmPerDay} mm/day`}
+                  />
+                  <StatRow
+                    icon={CalendarDays}
+                    label="Next 7 days"
+                    value={
+                      <>
+                        {irrigation.estimate.need7Mm} mm ·{' '}
+                        {irrigation.estimate.need7M3} m³
+                      </>
+                    }
+                  />
+                  <StatRow
+                    icon={Droplets}
+                    label="Each watering"
+                    value={
+                      <>
+                        ~{irrigation.estimate.perEventMm} mm every{' '}
+                        {irrigation.estimate.intervalDays}d
+                      </>
+                    }
+                  />
+                  <p className="compare">{irrigation.narrative.text}</p>
                   <ul className="schedule-list">
-                    {irrigation.pumpWindows.windows.map((row) => (
-                      <li
-                        key={`pw-${row.date}`}
-                        className={`sched-pump-${row.quality}`}
-                      >
+                    {irrigation.schedule.map((row) => (
+                      <li key={row.date} className={`sched-${row.action}`}>
                         <strong>{row.date}</strong>
                         <span>
-                          {row.quality === 'soft'
-                            ? `${String(row.startHour).padStart(2, '0')}:00–${String(row.endHour).padStart(2, '0')}:00 soft`
-                            : row.quality}
-                          {row.volumeM3 > 0
-                            ? ` · ${row.volumeM3} m³ · ~${row.estimatedKwh} kWh`
+                          {row.action}
+                          {row.volumeMm > 0
+                            ? ` · ${row.volumeMm} mm (${row.volumeM3} m³)`
                             : ''}
                         </span>
                         <em>{row.reason}</em>
                       </li>
                     ))}
                   </ul>
-                  <ul className="pump-assumptions">
-                    {irrigation.pumpWindows.assumptions.map((a) => (
-                      <li key={a}>{a}</li>
+                  <p className="hint">{irrigation.honesty}</p>
+
+                  {irrigation.pumpWindows && (
+                    <div className="pump-windows">
+                      <div className="panel-head tight">
+                        <h3 className="panel-title-icon">
+                          <Zap size={14} strokeWidth={2} aria-hidden />
+                          Best times to pump
+                        </h3>
+                      </div>
+                      <StatRow
+                        icon={Zap}
+                        label="Good pump windows"
+                        value={
+                          <>
+                            {irrigation.pumpWindows.summary.softWindows} · ~
+                            {irrigation.pumpWindows.summary.totalKwhEstimate}{' '}
+                            kWh
+                          </>
+                        }
+                      />
+                      <StatRow
+                        icon={Gauge}
+                        label="Saved vs peak hours"
+                        value={
+                          <>
+                            ~
+                            {
+                              irrigation.pumpWindows.summary
+                                .totalKwhSavedVsPeak
+                            }{' '}
+                            kWh
+                          </>
+                        }
+                      />
+                      {irrigation.pumpWindows.summary.blockedByInspect && (
+                        <p className="status error">
+                          Pump timing paused — check the crop view first
+                          (inspect flag).
+                        </p>
+                      )}
+                      <ul className="schedule-list">
+                        {irrigation.pumpWindows.windows.map((row) => (
+                          <li
+                            key={`pw-${row.date}`}
+                            className={`sched-pump-${row.quality}`}
+                          >
+                            <strong>{row.date}</strong>
+                            <span>
+                              {row.quality === 'soft'
+                                ? `${String(row.startHour).padStart(2, '0')}:00–${String(row.endHour).padStart(2, '0')}:00 preferred`
+                                : row.quality}
+                              {row.volumeM3 > 0
+                                ? ` · ${row.volumeM3} m³ · ~${row.estimatedKwh} kWh`
+                                : ''}
+                            </span>
+                            <em>{row.reason}</em>
+                          </li>
+                        ))}
+                      </ul>
+                      <ul className="pump-assumptions">
+                        {irrigation.pumpWindows.assumptions.map((a) => (
+                          <li key={a}>{a}</li>
+                        ))}
+                      </ul>
+                      <p className="hint">
+                        {irrigation.pumpWindows.honesty}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+          )}
+
+          {tab === 'history' && (
+            <>
+              <section className="panel">
+                <div className="panel-head">
+                  <h2 className="panel-title-icon">
+                    <History size={14} strokeWidth={2} aria-hidden />
+                    Past scans ({observations.length})
+                  </h2>
+                </div>
+                {observations.length === 0 ? (
+                  <EmptyHint
+                    icon={Satellite}
+                    title="No scans yet"
+                    text="Press Scan now for the clearest recent satellite day."
+                  />
+                ) : (
+                  <ul className="history-list">
+                    {observations.map((o) => (
+                      <li key={o._id}>
+                        <button
+                          type="button"
+                          onClick={() => loadObservation(o._id)}
+                        >
+                          <strong className="history-item-title">
+                            <CalendarDays
+                              size={13}
+                              strokeWidth={2}
+                              aria-hidden
+                            />
+                            {o.acquiredAt || 'undated'}
+                          </strong>
+                          <span>
+                            Greenness {fmtNdvi(o.stats?.mean)} · clouds{' '}
+                            {o.cloudCover != null ? `${o.cloudCover}%` : '—'}
+                          </span>
+                        </button>
+                      </li>
                     ))}
                   </ul>
-                  <p className="hint">{irrigation.pumpWindows.honesty}</p>
-                </div>
+                )}
+              </section>
+
+              {observations.length >= 2 && (
+                <section className="panel">
+                  <div className="panel-head">
+                    <h2 className="panel-title-icon">
+                      <GitCompareArrows
+                        size={14}
+                        strokeWidth={2}
+                        aria-hidden
+                      />
+                      Compare two days
+                    </h2>
+                  </div>
+                  <label className="field">
+                    <span className="field-label-icon">
+                      <CalendarDays size={13} strokeWidth={2} aria-hidden />
+                      Earlier day
+                    </span>
+                    <select
+                      value={compareA}
+                      onChange={(e) => setCompareA(e.target.value)}
+                    >
+                      {observations.map((o) => (
+                        <option key={o._id} value={o._id}>
+                          {o.acquiredAt || o._id} ·{' '}
+                          {fmtNdvi(o.stats?.mean)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span className="field-label-icon">
+                      <CalendarDays size={13} strokeWidth={2} aria-hidden />
+                      Later day
+                    </span>
+                    <select
+                      value={compareB}
+                      onChange={(e) => setCompareB(e.target.value)}
+                    >
+                      {observations.map((o) => (
+                        <option key={o._id} value={o._id}>
+                          {o.acquiredAt || o._id} ·{' '}
+                          {fmtNdvi(o.stats?.mean)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    className="primary"
+                    type="button"
+                    onClick={runCompare}
+                  >
+                    <GitCompareArrows
+                      size={15}
+                      strokeWidth={2}
+                      aria-hidden
+                    />
+                    Compare
+                  </button>
+                  {compareError && (
+                    <p className="status error">{compareError}</p>
+                  )}
+                  {compareResult && (
+                    <div className="compare-box">
+                      <p className="compare">
+                        Greenness change:{' '}
+                        <strong>{compareResult.deltaMeanNdvi ?? '—'}</strong>
+                        {compareResult.inspect.flag ? (
+                          <span className="inspect-badge">
+                            <AlertTriangle
+                              size={12}
+                              strokeWidth={2}
+                              aria-hidden
+                            />{' '}
+                            Check field
+                          </span>
+                        ) : null}
+                      </p>
+                      <p className="hint">{compareResult.inspect.reason}</p>
+                      {compareResult.inspect.evidence && (
+                        <ul className="evidence">
+                          {compareResult.inspect.evidence.map((line) => (
+                            <li key={line}>{line}</li>
+                          ))}
+                        </ul>
+                      )}
+                      {compareResult.interpretation && (
+                        <div
+                          className={`interpretation ${
+                            compareResult.inspect.flag ? 'flagged' : ''
+                          }`}
+                        >
+                          <h3>{compareResult.interpretation.label}</h3>
+                          <p>{compareResult.interpretation.text}</p>
+                        </div>
+                      )}
+                      {site && (
+                        <div className="report-actions">
+                          <a
+                            className="report-link"
+                            href={
+                              savedReportId
+                                ? api.savedReportUrl(site._id, savedReportId)
+                                : api.reportUrl(site._id, compareA, compareB)
+                            }
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <FileText size={14} strokeWidth={2} aria-hidden />
+                            Open report
+                          </a>
+                          <a
+                            className="report-link pdf"
+                            href={
+                              savedReportId
+                                ? api.savedReportUrl(
+                                    site._id,
+                                    savedReportId,
+                                    true,
+                                  )
+                                : api.reportUrl(
+                                    site._id,
+                                    compareA,
+                                    compareB,
+                                    true,
+                                  )
+                            }
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <FileText size={14} strokeWidth={2} aria-hidden />
+                            Save PDF
+                          </a>
+                          {savedReportId && (
+                            <span className="hint tight">
+                              Saved · use the PDF print dialog
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {reports.length > 0 && (
+                <section className="panel">
+                  <div className="panel-head">
+                    <h2 className="panel-title-icon">
+                      <FileText size={14} strokeWidth={2} aria-hidden />
+                      Saved reports ({reports.length})
+                    </h2>
+                  </div>
+                  <ul className="history-list">
+                    {reports.map((r) => (
+                      <li key={r._id}>
+                        <div className="report-row">
+                          <a
+                            className="report-link"
+                            href={api.savedReportUrl(siteId, r._id)}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <strong>
+                              {r.dateA || '?'} → {r.dateB || '?'}
+                            </strong>
+                            <span>
+                              Δ {r.deltaMeanNdvi ?? '—'}
+                              {r.inspectFlag ? ' · check field' : ''}
+                            </span>
+                          </a>
+                          <a
+                            className="ghost compact"
+                            href={api.savedReportUrl(siteId, r._id, true)}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <FileText size={13} strokeWidth={2} aria-hidden />
+                            PDF
+                          </a>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               )}
             </>
           )}
-        </section>
-
-        <section className="panel">
-          <div className="panel-head">
-            <h2>History ({observations.length})</h2>
-          </div>
-          {observations.length === 0 ? (
-            <div className="empty-block">
-              <p>No scans yet</p>
-              <span>Tap Scan latest for the newest clear Sentinel-2 date.</span>
-            </div>
-          ) : (
-            <ul className="history-list">
-              {observations.map((o) => (
-                <li key={o._id}>
-                  <button type="button" onClick={() => loadObservation(o._id)}>
-                    <strong>{o.acquiredAt || 'undated'}</strong>
-                    <span>
-                      NDVI {fmtNdvi(o.stats?.mean)} · cloud{' '}
-                      {o.cloudCover != null ? `${o.cloudCover}%` : '—'}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {observations.length >= 2 && (
-          <section className="panel">
-            <div className="panel-head">
-              <h2>Compare</h2>
-            </div>
-            <label className="field">
-              <span>Earlier</span>
-              <select
-                value={compareA}
-                onChange={(e) => setCompareA(e.target.value)}
-              >
-                {observations.map((o) => (
-                  <option key={o._id} value={o._id}>
-                    {o.acquiredAt || o._id} · NDVI {fmtNdvi(o.stats?.mean)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              <span>Later</span>
-              <select
-                value={compareB}
-                onChange={(e) => setCompareB(e.target.value)}
-              >
-                {observations.map((o) => (
-                  <option key={o._id} value={o._id}>
-                    {o.acquiredAt || o._id} · NDVI {fmtNdvi(o.stats?.mean)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button className="primary" type="button" onClick={runCompare}>
-              Compare
-            </button>
-            {compareError && <p className="status error">{compareError}</p>}
-            {compareResult && (
-              <div className="compare-box">
-                <p className="compare">
-                  Δ mean NDVI:{' '}
-                  <strong>{compareResult.deltaMeanNdvi ?? '—'}</strong>
-                  {compareResult.inspect.flag ? (
-                    <span className="inspect-badge"> INSPECT</span>
-                  ) : null}
-                </p>
-                <p className="hint">{compareResult.inspect.reason}</p>
-                {compareResult.inspect.evidence && (
-                  <ul className="evidence">
-                    {compareResult.inspect.evidence.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
-                )}
-                {compareResult.interpretation && (
-                  <div
-                    className={`interpretation ${
-                      compareResult.inspect.flag ? 'flagged' : ''
-                    }`}
-                  >
-                    <h3>{compareResult.interpretation.label}</h3>
-                    <p>{compareResult.interpretation.text}</p>
-                  </div>
-                )}
-                {site && (
-                  <div className="report-actions">
-                    <a
-                      className="report-link"
-                      href={
-                        savedReportId
-                          ? api.savedReportUrl(site._id, savedReportId)
-                          : api.reportUrl(site._id, compareA, compareB)
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Open HTML report
-                    </a>
-                    <a
-                      className="report-link pdf"
-                      href={
-                        savedReportId
-                          ? api.savedReportUrl(site._id, savedReportId, true)
-                          : api.reportUrl(site._id, compareA, compareB, true)
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Save PDF
-                    </a>
-                    {savedReportId && (
-                      <span className="hint tight">Saved in Mongo · PDF via print dialog</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-        )}
-
-        {reports.length > 0 && (
-          <section className="panel">
-            <div className="panel-head">
-              <h2>Saved reports ({reports.length})</h2>
-            </div>
-            <ul className="history-list">
-              {reports.map((r) => (
-                <li key={r._id}>
-                  <div className="report-row">
-                    <a
-                      className="report-link"
-                      href={api.savedReportUrl(siteId, r._id)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <strong>
-                        {r.dateA || '?'} → {r.dateB || '?'}
-                      </strong>
-                      <span>
-                        Δ {r.deltaMeanNdvi ?? '—'}
-                        {r.inspectFlag ? ' · INSPECT' : ''}
-                      </span>
-                    </a>
-                    <a
-                      className="ghost compact"
-                      href={api.savedReportUrl(siteId, r._id, true)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      PDF
-                    </a>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </aside>
-      <FieldMap
-        editable={false}
-        boundary={site?.boundary || null}
-        ndvi={ndvi}
-      />
+        </div>
+      </div>
     </div>
   );
 }

@@ -197,6 +197,25 @@ export default function FieldMap({
 
     mapObj.current = map;
 
+    // Prefer the user's current location when no field boundary is loaded yet.
+    let locateCancelled = false;
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          if (locateCancelled || !mapObj.current) return;
+          if (lastRingKeyRef.current) return;
+          mapObj.current.setView(
+            [pos.coords.latitude, pos.coords.longitude],
+            15,
+          );
+        },
+        () => {
+          /* keep START fallback */
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 60_000 },
+      );
+    }
+
     // Grid layout often mounts at 0 height — fix tiles + click hit-testing
     const fixSize = () => map.invalidateSize();
     requestAnimationFrame(fixSize);
@@ -209,6 +228,7 @@ export default function FieldMap({
     if (mapRef.current && ro) ro.observe(mapRef.current);
 
     return () => {
+      locateCancelled = true;
       window.clearTimeout(t1);
       window.clearTimeout(t2);
       ro?.disconnect();

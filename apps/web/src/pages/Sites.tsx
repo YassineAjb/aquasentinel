@@ -1,12 +1,26 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GripVertical, Plus, Trash2 } from 'lucide-react';
 import { api, type Site } from '../api';
 import FieldMap from '../components/FieldMap';
 import { useLanguage } from '../i18n';
 
+type DockPos = { x: number; y: number };
+
 export default function Sites() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    origX: number;
+    origY: number;
+  } | null>(null);
+  const [dockPos, setDockPos] = useState<DockPos | null>(null);
+  const [dragging, setDragging] = useState(false);
   const [sites, setSites] = useState<Site[]>([]);
   const [siteName, setSiteName] = useState('');
   const [plantType, setPlantType] = useState('');
@@ -20,6 +34,57 @@ export default function Sites() {
   const [statusKind, setStatusKind] = useState<'ok' | 'busy' | 'error' | ''>(
     '',
   );
+
+  const clampDockPos = useCallback((x: number, y: number): DockPos => {
+    const root = rootRef.current;
+    const dock = dockRef.current;
+    if (!root || !dock) return { x, y };
+    const pad = 8;
+    const maxX = Math.max(pad, root.clientWidth - dock.offsetWidth - pad);
+    const maxY = Math.max(pad, root.clientHeight - dock.offsetHeight - pad);
+    return {
+      x: Math.min(maxX, Math.max(pad, x)),
+      y: Math.min(maxY, Math.max(pad, y)),
+    };
+  }, []);
+
+  function onDockPointerDown(e: React.PointerEvent<HTMLElement>) {
+    if (e.button !== 0) return;
+    const dock = dockRef.current;
+    const root = rootRef.current;
+    if (!dock || !root) return;
+    const rect = dock.getBoundingClientRect();
+    const rootRect = root.getBoundingClientRect();
+    const origX = rect.left - rootRect.left;
+    const origY = rect.top - rootRect.top;
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX,
+      origY,
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDragging(true);
+    setDockPos({ x: origX, y: origY });
+  }
+
+  function onDockPointerMove(e: React.PointerEvent<HTMLElement>) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    setDockPos(
+      clampDockPos(
+        drag.origX + (e.clientX - drag.startX),
+        drag.origY + (e.clientY - drag.startY),
+      ),
+    );
+  }
+
+  function onDockPointerUp(e: React.PointerEvent<HTMLElement>) {
+    if (dragRef.current?.pointerId !== e.pointerId) return;
+    dragRef.current = null;
+    setDragging(false);
+  }
 
   const refresh = useCallback(async () => {
     const list = await api.listSites();
@@ -36,6 +101,51 @@ export default function Sites() {
       setStatusKind('error');
     });
   }, [refresh, t]);
+
+  useEffect(() => {
+    if (!dockPos) return;
+    const onResize = () => {
+      setDockPos((pos) => (pos ? clampDockPos(pos.x, pos.y) : pos));
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [dockPos, clampDockPos]);
+
+  function fillForm(site: Site | null) {
+    if (!site) {
+      setEditing(null);
+      setDraftBoundary(null);
+      setSiteName('');
+      setPlantType('');
+      setPlantAge('');
+      setSoilType('');
+      return;
+    }
+    setEditing(site);
+    setDraftBoundary(site.boundary);
+    setSiteName(site.name);
+    setPlantType(site.plantType || '');
+    setPlantAge(site.plantAge || '');
+    setSoilType(site.soilType || '');
+  }
+
+  function startNew() {
+    fillForm(null);
+    setStatus(t('sites.drawNew'));
+    setStatusKind('');
+  }
+
+  function selectSite(id: string) {
+    if (!id) {
+      startNew();
+      return;
+    }
+    const site = sites.find((s) => s._id === id);
+    if (!site) return;
+    fillForm(site);
+    setStatus(t('sites.editing', { name: site.name }));
+    setStatusKind('ok');
+  }
 
   function onBoundaryChange(feature: GeoJSON.Feature | null) {
     if (!feature || feature.geometry.type !== 'Polygon') {
@@ -65,12 +175,7 @@ export default function Sites() {
         plantAge: plantAge || undefined,
         soilType: soilType || undefined,
       });
-      setEditing(created);
-      setDraftBoundary(created.boundary);
-      setSiteName(created.name);
-      setPlantType(created.plantType || '');
-      setPlantAge(created.plantAge || '');
-      setSoilType(created.soilType || '');
+      fillForm(created);
       await refresh();
       setStatus(t('sites.saved', { name: created.name }));
       setStatusKind('ok');
@@ -96,12 +201,7 @@ export default function Sites() {
         plantAge: plantAge || undefined,
         soilType: soilType || undefined,
       });
-      setEditing(updated);
-      setDraftBoundary(updated.boundary);
-      setSiteName(updated.name);
-      setPlantType(updated.plantType || '');
-      setPlantAge(updated.plantAge || '');
-      setSoilType(updated.soilType || '');
+      fillForm(updated);
       await refresh();
       setStatus(t('sites.updated', { name: updated.name }));
       setStatusKind('ok');
@@ -111,21 +211,18 @@ export default function Sites() {
     }
   }
 
-  async function removeSite(site: Site) {
-    if (!window.confirm(t('sites.confirmDelete', { name: site.name }))) return;
+  async function removeSite() {
+    if (!editing) return;
+    const name = editing.name;
+    if (!window.confirm(t('sites.confirmDelete', { name }))) {
+      return;
+    }
     try {
       setStatusKind('busy');
-      await api.deleteSite(site._id);
-      if (editing?._id === site._id) {
-        setEditing(null);
-        setDraftBoundary(null);
-        setSiteName('');
-        setPlantType('');
-        setPlantAge('');
-        setSoilType('');
-      }
+      await api.deleteSite(editing._id);
       await refresh();
-      setStatus(t('sites.deleted', { name: site.name }));
+      fillForm(null);
+      setStatus(t('sites.deleted', { name }));
       setStatusKind('ok');
     } catch (err) {
       setStatus(err instanceof Error ? err.message : t('sites.deleteFailed'));
@@ -133,202 +230,8 @@ export default function Sites() {
     }
   }
 
-  function startNew() {
-    setEditing(null);
-    setDraftBoundary(null);
-    setSiteName('');
-    setPlantType('');
-    setPlantAge('');
-    setSoilType('');
-    setStatus(t('sites.drawNew'));
-    setStatusKind('');
-  }
-
-  function editSite(site: Site) {
-    setEditing(site);
-    setDraftBoundary(site.boundary);
-    setSiteName(site.name);
-    setPlantType(site.plantType || '');
-    setPlantAge(site.plantAge || '');
-    setSoilType(site.soilType || '');
-    setStatus(t('sites.editing', { name: site.name }));
-    setStatusKind('ok');
-  }
-
   return (
-    <div className="layout">
-      <aside className="sidebar">
-        <header className="sidebar-hero">
-          <p className="eyebrow">{t('sites.eyebrow')}</p>
-          <h1>{t('sites.title')}</h1>
-          <p className="sub">{t('sites.sub')}</p>
-        </header>
-
-        <div className={`status-banner ${statusKind || 'idle'}`}>{status}</div>
-
-        <section className="panel composer">
-          <div className="panel-head">
-            <h2>{editing ? t('sites.edit') : t('sites.new')}</h2>
-            {editing && (
-              <button className="text-btn" type="button" onClick={startNew}>
-                {t('sites.clear')}
-              </button>
-            )}
-          </div>
-          <label className="field">
-            <span>{t('sites.name')}</span>
-            <input
-              value={siteName}
-              onChange={(e) => setSiteName(e.target.value)}
-              placeholder={t('sites.namePh')}
-            />
-          </label>
-          <label className="field">
-            <span>{t('sites.plantType')}</span>
-            <select
-              value={plantType}
-              onChange={(e) => setPlantType(e.target.value)}
-            >
-              <option value="">{t('sites.select')}</option>
-              <option value="olivier">{t('sites.plant.olivier')}</option>
-              <option value="ble">{t('sites.plant.ble')}</option>
-              <option value="tomate">{t('sites.plant.tomate')}</option>
-              <option value="agrumes">{t('sites.plant.agrumes')}</option>
-              <option value="autre">{t('sites.plant.autre')}</option>
-            </select>
-          </label>
-          <label className="field">
-            <span>{t('sites.plantAge')}</span>
-            <select
-              value={plantAge}
-              onChange={(e) => setPlantAge(e.target.value)}
-            >
-              <option value="">{t('sites.select')}</option>
-              <option value="jeune">{t('sites.age.jeune')}</option>
-              <option value="vegetatif">{t('sites.age.vegetatif')}</option>
-              <option value="mature">{t('sites.age.mature')}</option>
-            </select>
-          </label>
-          <label className="field">
-            <span>{t('sites.soilType')}</span>
-            <select
-              value={soilType}
-              onChange={(e) => setSoilType(e.target.value)}
-            >
-              <option value="">{t('sites.select')}</option>
-              <option value="sableux">{t('sites.soil.sableux')}</option>
-              <option value="limoneux">{t('sites.soil.limoneux')}</option>
-              <option value="argileux">{t('sites.soil.argileux')}</option>
-            </select>
-          </label>
-          <p className="hint tight">{t('sites.hint')}</p>
-          <div className="actions stack">
-            {editing ? (
-              <>
-                <button
-                  className="primary"
-                  type="button"
-                  disabled={!draftBoundary}
-                  onClick={updateExisting}
-                >
-                  {t('sites.saveChanges')}
-                </button>
-                <button
-                  className="primary soft"
-                  type="button"
-                  onClick={() => navigate(`/analysis/${editing._id}`)}
-                >
-                  {t('sites.openAnalysis')}
-                </button>
-              </>
-            ) : (
-              <button
-                className="primary"
-                type="button"
-                disabled={!draftBoundary}
-                onClick={saveNew}
-              >
-                {t('sites.saveSite')}
-              </button>
-            )}
-            {!editing && (
-              <button className="ghost" type="button" onClick={startNew}>
-                {t('sites.reset')}
-              </button>
-            )}
-          </div>
-        </section>
-
-        <section className="panel grow">
-          <div className="panel-head">
-            <h2>{t('sites.savedCount', { count: sites.length })}</h2>
-            <button
-              className="text-btn"
-              type="button"
-              onClick={async () => {
-                try {
-                  const demo = (await fetch('/demo.json').then((r) =>
-                    r.json(),
-                  )) as { siteId: string };
-                  navigate(`/analysis/${demo.siteId}`);
-                } catch {
-                  setStatus(t('sites.demoMissing'));
-                  setStatusKind('error');
-                }
-              }}
-            >
-              {t('sites.demo')}
-            </button>
-          </div>
-
-          {sites.length === 0 ? (
-            <div className="empty-block">
-              <p>{t('sites.emptyTitle')}</p>
-              <span>{t('sites.emptyHint')}</span>
-            </div>
-          ) : (
-            <ul className="site-list">
-              {sites.map((s) => {
-                const active = editing?._id === s._id;
-                return (
-                  <li key={s._id} className={active ? 'active' : ''}>
-                    <button
-                      type="button"
-                      className="site-main"
-                      onClick={() => editSite(s)}
-                    >
-                      <strong>{s.name}</strong>
-                      <span>
-                        {active
-                          ? t('sites.editingNow')
-                          : s.plantType && s.plantAge && s.soilType
-                            ? `${s.plantType} · ${s.plantAge} · ${s.soilType}`
-                            : t('dash.cropIncomplete')}
-                      </span>
-                    </button>
-                    <div className="site-actions">
-                      <button
-                        type="button"
-                        className="ghost compact"
-                        onClick={() => navigate(`/analysis/${s._id}`)}
-                      >
-                        {t('sites.analyse')}
-                      </button>
-                      <button
-                        type="button"
-                        className="ghost compact danger"
-                        onClick={() => removeSite(s)}
-                      >
-                        {t('sites.delete')}
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-      </aside>
+    <div className="sites-manage" ref={rootRef}>
       <FieldMap
         editable
         boundary={draftBoundary}
@@ -338,6 +241,163 @@ export default function Sites() {
           setStatusKind('busy');
         }}
       />
+
+      <div
+        className={`sites-dock${dragging ? ' is-dragging' : ''}${dockPos ? ' is-placed' : ''}`}
+        ref={dockRef}
+        style={
+          dockPos
+            ? { left: dockPos.x, top: dockPos.y, right: 'auto' }
+            : undefined
+        }
+      >
+        <header
+          className="sites-dock-head"
+          onPointerDown={onDockPointerDown}
+          onPointerMove={onDockPointerMove}
+          onPointerUp={onDockPointerUp}
+          onPointerCancel={onDockPointerUp}
+        >
+          <div className="sites-dock-drag">
+            <GripVertical
+              className="float-dock-grip-icon"
+              size={18}
+              strokeWidth={2}
+              aria-hidden
+            />
+            <div>
+              <p className="eyebrow">{t('sites.eyebrow')}</p>
+              <h1>{t('sites.title')}</h1>
+            </div>
+          </div>
+          <p className={`sites-dock-status ${statusKind || 'idle'}`}>{status}</p>
+        </header>
+
+        <div className="sites-dock-picker">
+          <label className="field sites-dock-pick">
+            <span>{t('sites.pickLabel')}</span>
+            <select
+              value={editing?._id ?? ''}
+              onChange={(e) => selectSite(e.target.value)}
+            >
+              <option value="">{t('sites.pickNew')}</option>
+              {sites.map((s) => (
+                <option key={s._id} value={s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          {editing && (
+            <button
+              className="ghost compact"
+              type="button"
+              onClick={startNew}
+            >
+              <Plus size={14} strokeWidth={2} aria-hidden />
+              {t('sites.new')}
+            </button>
+          )}
+        </div>
+
+        <div className="sites-dock-form">
+          <label className="field">
+            <span>{t('sites.name')}</span>
+            <input
+              value={siteName}
+              onChange={(e) => setSiteName(e.target.value)}
+              placeholder={t('sites.namePh')}
+            />
+          </label>
+
+          <div className="sites-dock-grid">
+            <label className="field">
+              <span>{t('sites.plantType')}</span>
+              <select
+                value={plantType}
+                onChange={(e) => setPlantType(e.target.value)}
+              >
+                <option value="">{t('sites.select')}</option>
+                <option value="olivier">{t('sites.plant.olivier')}</option>
+                <option value="ble">{t('sites.plant.ble')}</option>
+                <option value="tomate">{t('sites.plant.tomate')}</option>
+                <option value="agrumes">{t('sites.plant.agrumes')}</option>
+                <option value="autre">{t('sites.plant.autre')}</option>
+              </select>
+            </label>
+            <label className="field">
+              <span>{t('sites.plantAge')}</span>
+              <select
+                value={plantAge}
+                onChange={(e) => setPlantAge(e.target.value)}
+              >
+                <option value="">{t('sites.select')}</option>
+                <option value="jeune">{t('sites.age.jeune')}</option>
+                <option value="vegetatif">{t('sites.age.vegetatif')}</option>
+                <option value="mature">{t('sites.age.mature')}</option>
+              </select>
+            </label>
+            <label className="field">
+              <span>{t('sites.soilType')}</span>
+              <select
+                value={soilType}
+                onChange={(e) => setSoilType(e.target.value)}
+              >
+                <option value="">{t('sites.select')}</option>
+                <option value="sableux">{t('sites.soil.sableux')}</option>
+                <option value="limoneux">{t('sites.soil.limoneux')}</option>
+                <option value="argileux">{t('sites.soil.argileux')}</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div className="sites-dock-actions">
+          {editing ? (
+            <>
+              <button
+                className="primary"
+                type="button"
+                disabled={!draftBoundary}
+                onClick={updateExisting}
+              >
+                {t('sites.saveChanges')}
+              </button>
+              <button
+                className="primary soft"
+                type="button"
+                onClick={() => navigate(`/analysis/${editing._id}`)}
+              >
+                {t('sites.analyse')}
+              </button>
+              <button
+                className="ghost danger"
+                type="button"
+                onClick={removeSite}
+              >
+                <Trash2 size={14} strokeWidth={2} aria-hidden />
+                {t('sites.delete')}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                className="primary"
+                type="button"
+                disabled={!draftBoundary}
+                onClick={saveNew}
+              >
+                {t('sites.saveSite')}
+              </button>
+              <button className="ghost" type="button" onClick={startNew}>
+                {t('sites.reset')}
+              </button>
+            </>
+          )}
+        </div>
+
+        <p className="hint tight">{t('sites.hint')}</p>
+      </div>
     </div>
   );
 }

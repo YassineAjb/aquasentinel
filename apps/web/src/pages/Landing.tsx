@@ -1,171 +1,148 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../api';
+import {
+  ArrowRight,
+  ChartSpline,
+  Droplets,
+  Moon,
+  Satellite,
+  ShieldAlert,
+  Sun,
+  Zap,
+} from 'lucide-react';
+import LanguageSelect from '../components/LanguageSelect';
 import { useLanguage } from '../i18n';
+import { useTheme } from '../theme';
 
-type LiveStats = {
-  sites: number;
-  scans: number;
-  latestNdvi: number | null;
-  latestDate: string | null;
-};
+const FEATURES = [
+  { key: 'monitor', Icon: Satellite },
+  { key: 'compare', Icon: ChartSpline },
+  { key: 'irrigate', Icon: Droplets },
+  { key: 'energy', Icon: Zap },
+  { key: 'guard', Icon: ShieldAlert },
+] as const;
 
-const DEMO = {
-  sensor: 'Sentinel-2 L2A',
-  resolution: '10 m',
-  dates: ['2026-11-08', '2026-11-13', '2026-11-15'],
-  ndviBefore: 0.223,
-  ndviAfter: 0.205,
-  delta: -0.018,
-  cloudBefore: 9.8,
-  cloudAfter: 0.2,
-};
+const STEPS = ['map', 'scan', 'decide'] as const;
 
 export default function Landing() {
   const { t } = useLanguage();
-  const [live, setLive] = useState<LiveStats>({
-    sites: 0,
-    scans: 0,
-    latestNdvi: null,
-    latestDate: null,
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const sites = await api.listSites();
-        const obsLists = await Promise.all(
-          sites.map((s) => api.listObservations(s._id).catch(() => [])),
-        );
-        if (cancelled) return;
-        const flat = obsLists.flat();
-        const latest = flat
-          .slice()
-          .sort((a, b) =>
-            (a.acquiredAt || '') < (b.acquiredAt || '') ? 1 : -1,
-          )[0];
-        setLive({
-          sites: sites.length,
-          scans: flat.length,
-          latestNdvi: latest?.stats?.mean ?? null,
-          latestDate: latest?.acquiredAt ?? null,
-        });
-      } catch {
-        /* keep zeros — landing still works offline */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="landing-page">
-      <section className="landing-hero">
-        <div className="landing-hero-media" aria-hidden />
+      <header className="landing-topbar">
+        <Link className="landing-topbar-brand" to="/">
+          <img
+            className="landing-topbar-logo"
+            src="/logo/logo.png"
+            alt=""
+            width={36}
+            height={36}
+          />
+          <span className="landing-topbar-name">SAKIYA</span>
+        </Link>
+
+        <div className="landing-topbar-actions">
+          <LanguageSelect className="landing-lang" />
+
+          <button
+            type="button"
+            className="landing-theme-btn"
+            onClick={toggleTheme}
+            aria-label={
+              theme === 'dark' ? t('nav.themeLight') : t('nav.themeDark')
+            }
+            title={theme === 'dark' ? t('nav.themeLight') : t('nav.themeDark')}
+          >
+            {theme === 'dark' ? (
+              <Sun size={18} strokeWidth={2} aria-hidden />
+            ) : (
+              <Moon size={18} strokeWidth={2} aria-hidden />
+            )}
+          </button>
+
+          <Link className="primary inline landing-start" to="/dashboard">
+            <span>{t('landing.start')}</span>
+            <ArrowRight size={15} strokeWidth={2.4} aria-hidden />
+          </Link>
+        </div>
+      </header>
+
+      <section className="landing-hero has-art-brand">
+        <img
+          className="landing-hero-media"
+          src="/hero.jpeg"
+          alt="SAKIYA — intelligent agriculture for a sustainable future"
+          width={1600}
+          height={900}
+          decoding="async"
+          fetchPriority="high"
+        />
         <div className="landing-hero-veil" aria-hidden />
         <div className="landing-stage">
           <p className="landing-brand">SAKIYA</p>
           <h1>{t('landing.headline')}</h1>
           <p className="landing-lead">{t('landing.lead')}</p>
-          <div className="landing-cta">
-            <Link className="primary inline" to="/dashboard">
-              {t('landing.openDashboard')}
-            </Link>
-            <Link className="ghost inline" to="/analysis">
-              {t('landing.runAnalysis')}
-            </Link>
+        </div>
+      </section>
+
+      <section className="landing-section">
+        <header className="landing-section-head">
+          <p className="eyebrow">{t('landing.aboutEyebrow')}</p>
+          <h2>{t('landing.aboutTitle')}</h2>
+          <p className="sub">{t('landing.aboutSub')}</p>
+        </header>
+        <div className="landing-pillars">
+          <div>
+            <strong>{t('landing.pillarWater')}</strong>
+            <span>{t('landing.pillarWaterText')}</span>
+          </div>
+          <div>
+            <strong>{t('landing.pillarEnergy')}</strong>
+            <span>{t('landing.pillarEnergyText')}</span>
+          </div>
+          <div>
+            <strong>{t('landing.pillarFood')}</strong>
+            <span>{t('landing.pillarFoodText')}</span>
           </div>
         </div>
       </section>
 
-      <section className="landing-section landing-data">
+      <section className="landing-section">
         <header className="landing-section-head">
-          <p className="eyebrow">{t('landing.liveEyebrow')}</p>
-          <h2>{t('landing.liveTitle')}</h2>
-          <p className="sub">{t('landing.liveSub')}</p>
+          <p className="eyebrow">{t('landing.featuresEyebrow')}</p>
+          <h2>{t('landing.featuresTitle')}</h2>
+          <p className="sub">{t('landing.featuresSub')}</p>
         </header>
-
-        <div className="landing-metrics">
-          <div className="landing-metric">
-            <strong>{live.sites}</strong>
-            <span>{t('landing.savedSites')}</span>
-          </div>
-          <div className="landing-metric">
-            <strong>{live.scans}</strong>
-            <span>{t('landing.storedScans')}</span>
-          </div>
-          <div className="landing-metric">
-            <strong>
-              {live.latestNdvi != null ? live.latestNdvi.toFixed(3) : '—'}
-            </strong>
-            <span>
-              {t('landing.latestNdvi')}
-              {live.latestDate ? ` · ${live.latestDate}` : ''}
-            </span>
-          </div>
-          <div className="landing-metric">
-            <strong>10 m</strong>
-            <span>{t('landing.resolution')}</span>
-          </div>
-        </div>
+        <ul className="landing-features">
+          {FEATURES.map(({ key, Icon }) => (
+            <li key={key}>
+              <Icon size={20} strokeWidth={2} aria-hidden />
+              <div>
+                <strong>{t(`landing.feature.${key}.title`)}</strong>
+                <span>{t(`landing.feature.${key}.text`)}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
       </section>
 
-      <section className="landing-section landing-compare">
+      <section className="landing-section">
         <header className="landing-section-head">
-          <p className="eyebrow">{t('landing.demoEyebrow')}</p>
-          <h2>{t('landing.demoTitle')}</h2>
-          <p className="sub">
-            {t('landing.demoSub', {
-              sensor: DEMO.sensor,
-              cloudBefore: DEMO.cloudBefore,
-              cloudAfter: DEMO.cloudAfter,
-              delta: DEMO.delta.toFixed(3),
-            })}
-          </p>
+          <p className="eyebrow">{t('landing.howEyebrow')}</p>
+          <h2>{t('landing.howTitle')}</h2>
+          <p className="sub">{t('landing.howSub')}</p>
         </header>
-
-        <div className="landing-pair">
-          <figure className="landing-frame">
-            <img
-              src="/landing/ndvi-older.png"
-              alt={`NDVI ${DEMO.dates[0]}`}
-            />
-            <figcaption>
-              <span>{DEMO.dates[0]}</span>
-              <strong>NDVI {DEMO.ndviBefore.toFixed(3)}</strong>
-            </figcaption>
-          </figure>
-          <figure className="landing-frame">
-            <img
-              src="/landing/ndvi-latest.png"
-              alt={`NDVI ${DEMO.dates[2]}`}
-            />
-            <figcaption>
-              <span>{DEMO.dates[2]}</span>
-              <strong>NDVI {DEMO.ndviAfter.toFixed(3)}</strong>
-            </figcaption>
-          </figure>
-        </div>
-
-        <div className="landing-facts">
-          <p>
-            <strong>{t('landing.pipeline')}</strong> {t('landing.pipelineText')}
-          </p>
-          <p>
-            <strong>{t('landing.honesty')}</strong> {t('landing.honestyText')}
-          </p>
-        </div>
-
-        <div className="landing-cta">
-          <Link className="primary inline" to="/sites">
-            {t('landing.drawSite')}
-          </Link>
-          <Link className="ghost inline" to="/dashboard">
-            {t('landing.loadDemo')}
-          </Link>
-        </div>
+        <ol className="landing-steps">
+          {STEPS.map((key, i) => (
+            <li key={key}>
+              <span className="landing-step-num">{i + 1}</span>
+              <div>
+                <strong>{t(`landing.step.${key}.title`)}</strong>
+                <span>{t(`landing.step.${key}.text`)}</span>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
     </div>
   );

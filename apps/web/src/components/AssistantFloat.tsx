@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MessageCircle, Sparkles, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useLanguage } from '../i18n';
 import AssistantPanel from './AssistantPanel';
 
@@ -82,7 +82,14 @@ export default function AssistantFloat() {
           aria-label={t('assistant.open')}
           title={t('assistant.title')}
         >
-          <MessageCircle size={22} strokeWidth={2} aria-hidden />
+          <img
+            className="assistant-fab-logo"
+            src="/assistant-logo.png"
+            alt=""
+            width={56}
+            height={56}
+            draggable={false}
+          />
         </button>
       )}
 
@@ -103,13 +110,15 @@ export default function AssistantFloat() {
             <div className="assistant-modal-glow" aria-hidden />
             <header className="assistant-modal-head">
               <div className="assistant-modal-brand">
-                <span className="assistant-modal-icon" aria-hidden>
-                  <Sparkles size={18} strokeWidth={2} />
-                </span>
-                <div>
-                  <p className="eyebrow">SAKIYA</p>
-                  <h2>{t('assistant.title')}</h2>
-                </div>
+                <img
+                  className="assistant-modal-logo"
+                  src="/assistant-logo.png"
+                  alt=""
+                  width={54}
+                  height={54}
+                  draggable={false}
+                />
+                <p className="eyebrow">SAKIYA</p>
               </div>
               <button
                 type="button"

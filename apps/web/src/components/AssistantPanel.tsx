@@ -309,28 +309,6 @@ export default function AssistantPanel({
 
   const hasText = input.trim().length > 0;
 
-  const bubble = (role: Msg['role']): React.CSSProperties => ({
-    alignSelf: role === 'user' ? 'flex-end' : 'flex-start',
-    maxWidth: '88%',
-    padding: '10px 13px',
-    borderRadius: role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-    whiteSpace: 'pre-wrap',
-    border:
-      role === 'user'
-        ? '1px solid rgba(120, 210, 150, 0.35)'
-        : '1px solid rgba(255, 255, 255, 0.14)',
-    background:
-      role === 'user'
-        ? 'linear-gradient(145deg, rgba(47, 158, 68, 0.55), rgba(20, 90, 50, 0.45))'
-        : 'rgba(255, 255, 255, 0.08)',
-    boxShadow:
-      role === 'user'
-        ? 'inset 0 1px 0 rgba(255,255,255,0.22)'
-        : 'inset 0 1px 0 rgba(255,255,255,0.12)',
-    color: role === 'user' ? '#f4fff6' : 'rgba(240, 248, 242, 0.95)',
-    backdropFilter: 'blur(10px)',
-  });
-
   const last = messages[messages.length - 1];
   const streamingEmpty =
     busy && last?.role === 'assistant' && last.content.length === 0;
@@ -346,15 +324,6 @@ export default function AssistantPanel({
                 {r.dateA || '?'} → {r.dateB || '?'}
               </option>
             ))}
-          </select>
-        </label>
-
-        <label className="field">
-          <span>{t('assistant.answerLang')}</span>
-          <select value={lang} onChange={(e) => setLang(e.target.value)}>
-            <option value="en">English</option>
-            <option value="ar-tn">العربية</option>
-            <option value="ja">日本語</option>
           </select>
         </label>
       </div>
@@ -382,11 +351,15 @@ export default function AssistantPanel({
             busy && i === messages.length - 1 && m.role === 'assistant';
           if (isStreamingTail && !m.content) return null;
           return (
-            <div key={i} dir="auto" style={bubble(m.role)}>
+            <div
+              key={i}
+              dir="auto"
+              className={`assistant-bubble assistant-bubble-${m.role}`}
+            >
               {m.content}
               {isStreamingTail && <span className="assistant-cursor">▍</span>}
               {m.sources && m.sources.length > 0 && (
-                <div className="hint tight" dir="ltr" style={{ marginTop: 4 }}>
+                <div className="hint tight assistant-sources" dir="ltr">
                   Sources: {m.sources.join(', ')}
                 </div>
               )}
@@ -394,7 +367,7 @@ export default function AssistantPanel({
           );
         })}
         {streamingEmpty && (
-          <div style={bubble('assistant')}>
+          <div className="assistant-bubble assistant-bubble-assistant">
             Thinking…
             <span className="assistant-cursor">▍</span>
           </div>

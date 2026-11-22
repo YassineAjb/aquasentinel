@@ -172,7 +172,7 @@ export default function RainCatchCanvas({
         ctx.stroke();
         if (sel || c.rank <= 3) {
           ctx.fillStyle = '#e7f0e8';
-          ctx.font = `600 ${Math.max(10, cellW * 2.2)}px Figtree, sans-serif`;
+          ctx.font = `600 ${Math.max(10, cellW * 2.2)}px Montserrat, sans-serif`;
           ctx.textAlign = 'center';
           ctx.fillText(c.id, x, y - (sel ? 10 : 8));
         }
