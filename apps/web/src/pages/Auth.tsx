@@ -2,13 +2,14 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Droplets, Eye, EyeOff, Leaf, X, Zap } from 'lucide-react';
 import { useAuth } from '../auth';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 import { useLanguage } from '../i18n';
 
 type Mode = 'login' | 'signup';
 
 export default function Auth({ mode }: { mode: Mode }) {
   const { t } = useLanguage();
-  const { user, ready, login, register } = useAuth();
+  const { user, ready, login, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from =
@@ -43,6 +44,19 @@ export default function Auth({ mode }: { mode: Mode }) {
     }
   }
 
+  async function onGoogle(credential: string) {
+    setError('');
+    setBusy(true);
+    try {
+      await loginWithGoogle(credential);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('auth.failed'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const isSignup = mode === 'signup';
 
   return (
@@ -63,6 +77,17 @@ export default function Auth({ mode }: { mode: Mode }) {
                 {isSignup ? t('auth.signupLead') : t('auth.loginLead')}
               </p>
             </header>
+
+            <GoogleSignInButton
+              disabled={busy}
+              label={t('auth.google')}
+              onCredential={(credential) => void onGoogle(credential)}
+              onError={(message) => setError(message)}
+            />
+
+            <div className="auth-divider" role="separator">
+              <span>{t('auth.orEmail')}</span>
+            </div>
 
             {isSignup && (
               <label className="auth-field">
