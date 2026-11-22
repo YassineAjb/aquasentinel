@@ -9,6 +9,7 @@ import {
   PanelLeftClose,
   ShieldAlert,
   Sun,
+  Contrast,
   ZoomIn,
   type LucideProps,
 } from 'lucide-react';
@@ -51,7 +52,12 @@ const TOUR_TARGETS: Record<string, string> = {
 export default function AppShell() {
   const { t, locale, setLocale } = useLanguage();
   const { theme, setTheme } = useTheme();
-  const { a11y, toggleA11y } = useAccessibility();
+  const {
+    easyRead,
+    highContrast,
+    toggleEasyRead,
+    toggleHighContrast,
+  } = useAccessibility();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { open: tourOpen, setOpen: setTourOpen, start: startTour } =
@@ -178,14 +184,25 @@ export default function AppShell() {
           </div>
           <button
             type="button"
-            className={`app-lang-btn app-a11y-btn${a11y ? ' is-active' : ''}`}
-            aria-pressed={a11y}
-            title={a11y ? t('nav.a11yOn') : t('nav.a11yOff')}
-            aria-label={a11y ? t('nav.a11yOn') : t('nav.a11yOff')}
-            onClick={toggleA11y}
+            className={`app-lang-btn app-a11y-btn${easyRead ? ' is-active' : ''}`}
+            aria-pressed={easyRead}
+            title={easyRead ? t('nav.a11yOn') : t('nav.a11yOff')}
+            aria-label={easyRead ? t('nav.a11yOn') : t('nav.a11yOff')}
+            onClick={toggleEasyRead}
           >
             <ZoomIn size={15} strokeWidth={2} aria-hidden />
             {!collapsed && <span>{t('nav.a11y')}</span>}
+          </button>
+          <button
+            type="button"
+            className={`app-lang-btn app-a11y-btn${highContrast ? ' is-active' : ''}`}
+            aria-pressed={highContrast}
+            title={highContrast ? t('nav.contrastOn') : t('nav.contrastOff')}
+            aria-label={highContrast ? t('nav.contrastOn') : t('nav.contrastOff')}
+            onClick={toggleHighContrast}
+          >
+            <Contrast size={15} strokeWidth={2} aria-hidden />
+            {!collapsed && <span>{t('nav.contrast')}</span>}
           </button>
           <TutorialHelpButton onClick={startTour} />
           {(user || !collapsed) && (

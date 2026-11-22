@@ -18,6 +18,7 @@ import {
   type WaterMeasurement,
 } from '../api';
 import SiteMiniMap from '../components/SiteMiniMap';
+import { useConfirm } from '../confirm';
 import { useLanguage } from '../i18n';
 import './WaterGuard.css';
 
@@ -43,6 +44,7 @@ const STEP_MS = DEMO_MS / DEMO_STEPS.length;
 
 export default function WaterGuard() {
   const { t } = useLanguage();
+  const { confirm } = useConfirm();
   const STATUS_LABEL: Record<string, string> = {
     NORMAL: t('wg.status.NORMAL'),
     WARNING: t('wg.status.WARNING'),
@@ -144,9 +146,11 @@ export default function WaterGuard() {
       await runDemo(siteId, gen);
       if (demoGen.current === gen) {
         setMessage('Monitoring complete. Review any alerts below.');
+        confirm(t('confirm.monitorDone'));
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : t('wg.failed'));
+      confirm(t('confirm.failed'), 'error');
     } finally {
       if (demoGen.current === gen) setDemoRunning(false);
       setBusy(false);

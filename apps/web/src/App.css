@@ -144,7 +144,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  /* Do not shrink below content — avoids links painting over .app-lang */
+  /* Do not shrink below content â avoids links painting over .app-lang */
   flex: 0 0 auto;
 }
 
@@ -5144,7 +5144,7 @@ h2 {
   color: var(--faint);
 }
 
-/* ââ First-run tutorial (farmer-friendly) ââ */
+/* Ã¢ÂÂÃ¢ÂÂ First-run tutorial (farmer-friendly) Ã¢ÂÂÃ¢ÂÂ */
 .tour-target-live {
   z-index: 1500 !important;
   pointer-events: none !important;
@@ -5390,7 +5390,7 @@ html[dir='rtl'] .tour-card-center {
     max-width: none;
   }
 
-  /* Default: tip near bottom â but not when highlighting the assistant FAB */
+  /* Default: tip near bottom Ã¢ÂÂ but not when highlighting the assistant FAB */
   .tour-card-anchored:not(.tour-card-above-fab) {
     bottom: 12px;
     top: auto !important;
@@ -5408,5 +5408,109 @@ html[dir='rtl'] .tour-card-center {
   .tour-btn {
     flex: 1 1 auto;
     min-width: 6.5rem;
+  }
+}
+
+/* ── Plain-language action confirmations ── */
+.confirm-stack {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 1600;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.65rem;
+  max-width: min(420px, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.confirm-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.95rem 1rem;
+  border-radius: 14px;
+  border: 2px solid color-mix(in srgb, var(--ok) 55%, var(--line));
+  background: var(--bg-aside);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  color: var(--text);
+  animation: confirm-in 0.28s ease;
+}
+
+.confirm-toast-error {
+  border-color: color-mix(in srgb, var(--danger) 60%, var(--line));
+}
+
+.confirm-toast-info {
+  border-color: color-mix(in srgb, var(--aqua) 55%, var(--line));
+}
+
+.confirm-toast-icon {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--ok) 22%, transparent);
+  color: var(--ok);
+}
+
+.confirm-toast-error .confirm-toast-icon {
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  color: var(--danger);
+}
+
+.confirm-toast-msg {
+  margin: 0;
+  flex: 1;
+  font-size: 1.08rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.confirm-toast-close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-hover);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+@keyframes confirm-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html[dir='rtl'] .confirm-stack {
+  right: auto;
+  left: 1.25rem;
+}
+
+html[data-a11y='on'] .confirm-toast-msg {
+  font-size: 1.2rem;
+}
+
+@media (max-width: 900px) {
+  .confirm-stack {
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 5.5rem;
+    max-width: none;
   }
 }

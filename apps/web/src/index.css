@@ -165,36 +165,74 @@ select:focus {
   filter: saturate(1.15) contrast(1.05);
 }
 
-/* ── Accessibility / Easy-read mode ── */
+/* ── Easy-read mode (bigger text & targets only) ── */
 html[data-a11y='on'] {
   --a11y-scale: 1.22;
   --radius: 14px;
   font-size: 112.5%; /* ~18px root → larger rem-based UI */
 }
 
-html[data-a11y='on'][data-theme='dark'] {
-  --text: #ffffff;
-  --muted: #d5ebe0;
-  --faint: #b7d0c3;
-  --line: rgba(149, 213, 178, 0.45);
-  --bg-hover: rgba(255, 255, 255, 0.1);
-  --bg-hover-strong: rgba(255, 255, 255, 0.14);
-  --accent: #74c69d;
-}
-
-html[data-a11y='on'][data-theme='light'] {
-  --text: #0d2818;
-  --muted: #1b4332;
-  --faint: #2d6a4f;
-  --line: rgba(27, 67, 50, 0.28);
-  --bg-hover: rgba(27, 67, 50, 0.08);
-  --bg-hover-strong: rgba(27, 67, 50, 0.12);
-  --accent: #2d6a4f;
-}
-
 html[data-a11y='on'] body {
   letter-spacing: 0.01em;
   line-height: 1.55;
+}
+
+/* ── High-contrast mode (colors only — independent of Easy read) ── */
+html[data-contrast='on'][data-theme='dark'] {
+  --text: #ffffff;
+  --muted: #e8fff1;
+  --faint: #c6e6d4;
+  --line: rgba(180, 240, 200, 0.55);
+  --bg: #000000;
+  --bg-aside: #050a07;
+  --bg-panel: #0a140f;
+  --bg-panel-2: #0e1a13;
+  --bg-input: #000000;
+  --bg-nav: #050a07;
+  --bg-hover: rgba(255, 255, 255, 0.12);
+  --bg-hover-strong: rgba(255, 255, 255, 0.18);
+  --accent: #7dffa8;
+  --accent-text: #ffffff;
+  --warn: #ffe08a;
+  --danger: #ffb4a8;
+  --ok: #9dffc0;
+}
+
+html[data-contrast='on'][data-theme='light'] {
+  --text: #000000;
+  --muted: #0d2818;
+  --faint: #1b4332;
+  --line: rgba(0, 0, 0, 0.45);
+  --bg: #ffffff;
+  --bg-aside: #ffffff;
+  --bg-panel: #ffffff;
+  --bg-panel-2: #f0f4f1;
+  --bg-input: #ffffff;
+  --bg-nav: #ffffff;
+  --bg-hover: rgba(0, 0, 0, 0.06);
+  --bg-hover-strong: rgba(0, 0, 0, 0.1);
+  --accent: #0b5c38;
+  --accent-text: #000000;
+  --warn: #7a4a00;
+  --danger: #8b0000;
+  --ok: #0b5c38;
+}
+
+html[data-contrast='on'] body {
+  font-weight: 550;
+}
+
+html[data-contrast='on'] .app-nav-link,
+html[data-contrast='on'] .app-lang-btn,
+html[data-contrast='on'] .app-theme-btn {
+  border-width: 2px;
+}
+
+html[data-contrast='on'] .app-nav-link.active,
+html[data-contrast='on'] .app-lang-btn.is-active,
+html[data-contrast='on'] .app-theme-btn.is-active {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 html[data-a11y='on'] button,

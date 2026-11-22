@@ -39,6 +39,8 @@ import {
   type WeatherSeries,
 } from '../api';
 import FieldMap from '../components/FieldMap';
+import { useConfirm } from '../confirm';
+import { useLanguage } from '../i18n';
 
 const LOW_COVERAGE = 70;
 type SceneVisual = 'original' | 'enhanced';
@@ -137,6 +139,8 @@ function pumpQualityLabel(quality: string, startHour?: number, endHour?: number)
 
 export default function Analysis() {
   const { siteId } = useParams<{ siteId: string }>();
+  const { t } = useLanguage();
+  const { confirm } = useConfirm();
   const rootRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
@@ -363,6 +367,7 @@ export default function Analysis() {
         }`,
       );
       setStatusKind(warn ? 'error' : 'ok');
+      confirm(t('confirm.scanDone'), warn ? 'info' : 'ok');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Scan failed';
       const friendly = /no low-cloud|out of range|already scanned/i.test(msg)
@@ -370,6 +375,7 @@ export default function Analysis() {
         : msg;
       setStatus(friendly);
       setStatusKind('error');
+      confirm(t('confirm.failed'), 'error');
     }
   }
 
@@ -419,10 +425,12 @@ export default function Analysis() {
         `Compared ${result.a.acquiredAt || 'A'} → ${result.b.acquiredAt || 'B'} · report saved`,
       );
       setStatusKind('ok');
+      confirm(t('confirm.reportSaved'));
     } catch (err) {
       setCompareResult(null);
       setCompareError(err instanceof Error ? err.message : 'Compare failed');
       setStatusKind('error');
+      confirm(t('confirm.failed'), 'error');
     }
   }
 
@@ -780,6 +788,7 @@ export default function Analysis() {
                       setPlanOpen(true);
                       setStatus('Watering plan ready.');
                       setStatusKind('ok');
+                      confirm(t('confirm.planReady'));
                     } catch (err) {
                       setIrrigation(null);
                       setPlanOpen(false);
@@ -789,6 +798,7 @@ export default function Analysis() {
                           : 'Could not build a plan',
                       );
                       setStatusKind('error');
+                      confirm(t('confirm.failed'), 'error');
                     } finally {
                       setIrrigationBusy(false);
                     }

@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { GripVertical, Plus, Trash2 } from 'lucide-react';
 import { api, type Site } from '../api';
 import FieldMap from '../components/FieldMap';
+import { useConfirm } from '../confirm';
 import { useLanguage } from '../i18n';
 
 type DockPos = { x: number; y: number };
 
 export default function Sites() {
   const { t } = useLanguage();
+  const { confirm } = useConfirm();
   const navigate = useNavigate();
   const rootRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
@@ -179,9 +181,11 @@ export default function Sites() {
       await refresh();
       setStatus(t('sites.saved', { name: created.name }));
       setStatusKind('ok');
+      confirm(t('confirm.fieldSaved'));
     } catch (err) {
       setStatus(err instanceof Error ? err.message : t('sites.saveFailed'));
       setStatusKind('error');
+      confirm(t('confirm.failed'), 'error');
     }
   }
 
@@ -205,9 +209,11 @@ export default function Sites() {
       await refresh();
       setStatus(t('sites.updated', { name: updated.name }));
       setStatusKind('ok');
+      confirm(t('confirm.fieldUpdated'));
     } catch (err) {
       setStatus(err instanceof Error ? err.message : t('sites.updateFailed'));
       setStatusKind('error');
+      confirm(t('confirm.failed'), 'error');
     }
   }
 
@@ -224,9 +230,11 @@ export default function Sites() {
       fillForm(null);
       setStatus(t('sites.deleted', { name }));
       setStatusKind('ok');
+      confirm(t('confirm.fieldDeleted'));
     } catch (err) {
       setStatus(err instanceof Error ? err.message : t('sites.deleteFailed'));
       setStatusKind('error');
+      confirm(t('confirm.failed'), 'error');
     }
   }
 
