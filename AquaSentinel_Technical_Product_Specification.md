@@ -1,4 +1,4 @@
-# AquaSentinel --- Technical Product Specification
+# SAKIYA --- Technical Product Specification
 
 **Document type:** Product and technical specification\
 **Version:** 0.1 --- Working draft\
@@ -9,7 +9,7 @@
 
 ## 1. Product overview
 
-**AquaSentinel** is an AI-assisted geospatial and environmental
+**SAKIYA** is an AI-assisted geospatial and environmental
 monitoring platform. It combines satellite imagery, geographic
 information, environmental datasets, and optional field observations to
 help users understand the condition of a selected area and monitor how
@@ -30,7 +30,7 @@ interpret, and use for monitoring and decision support.
 
 ### Product positioning
 
-AquaSentinel is an **environmental intelligence platform**, not simply
+SAKIYA is an **environmental intelligence platform**, not simply
 an irrigation controller or a satellite-image viewer.
 
 ------------------------------------------------------------------------
@@ -61,7 +61,7 @@ or risks?
 
 ## 3. Proposed solution
 
-AquaSentinel provides a workflow for defining a site, collecting
+SAKIYA provides a workflow for defining a site, collecting
 relevant data, processing imagery, calculating environmental indicators,
 comparing observations over time, and presenting the results in a
 unified interface.
@@ -71,7 +71,7 @@ The proposed workflow is:
 1.  The user creates a monitoring site.
 2.  The user identifies the area using a map, coordinates, or an
     uploaded boundary.
-3.  AquaSentinel retrieves available satellite imagery and relevant
+3.  SAKIYA retrieves available satellite imagery and relevant
     environmental datasets for that area and period.
 4.  The imagery pipeline prepares the data for visualization and
     analysis.
@@ -102,7 +102,7 @@ pay still need validation.
 ### Initial use case: agricultural field monitoring
 
 A user registers an agricultural site, defines its boundary, and selects
-a monitoring period. AquaSentinel retrieves available imagery and
+a monitoring period. SAKIYA retrieves available imagery and
 environmental information, calculates vegetation indicators, and
 presents the field's condition and changes over time.
 
@@ -252,7 +252,7 @@ indicators. - Alert and event lists. - Exportable monitoring reports.
 
 ## 6. Input data specification
 
-AquaSentinel combines several input categories. Not every category is
+SAKIYA combines several input categories. Not every category is
 required for every analysis.
 
   -----------------------------------------------------------------------
@@ -584,7 +584,7 @@ number of unvalidated AI features.
 
 ## 14. Added value
 
-AquaSentinel's intended value is to:
+SAKIYA's intended value is to:
 
 1.  **Centralize information:** Bring site geometry, satellite imagery,
     and environmental indicators into one workflow.
@@ -599,7 +599,7 @@ AquaSentinel's intended value is to:
 6.  **Support decisions:** Give users evidence that can inform field
     inspections and environmental management.
 
-AquaSentinel supports decision-making; it does not replace on-site
+SAKIYA supports decision-making; it does not replace on-site
 verification or qualified environmental assessment.
 
 ------------------------------------------------------------------------
@@ -694,7 +694,7 @@ impression alone.
 
 ## 18. Product summary
 
-**AquaSentinel is an AI-assisted geospatial and environmental monitoring
+**SAKIYA is an AI-assisted geospatial and environmental monitoring
 platform that combines satellite imagery, geographic information, and
 environmental datasets to visualize land conditions, analyze vegetation,
 track changes over time, and identify potential environmental risks.**

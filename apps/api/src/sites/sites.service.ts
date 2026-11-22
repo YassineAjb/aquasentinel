@@ -540,17 +540,17 @@ export class SitesService {
 
   /** Farmer can Save as PDF via browser print dialog. */
   private withPrintChrome(html: string, autoPrint = false) {
-    if (html.includes('data-aquasentinel-print')) {
-      if (autoPrint && !html.includes('data-aquasentinel-autoprint')) {
+    if (html.includes('data-sakiya-print')) {
+      if (autoPrint && !html.includes('data-sakiya-autoprint')) {
         return html.replace(
           '</body>',
-          `<script data-aquasentinel-autoprint>window.addEventListener('load',()=>setTimeout(()=>window.print(),400));</script></body>`,
+          `<script data-sakiya-autoprint>window.addEventListener('load',()=>setTimeout(()=>window.print(),400));</script></body>`,
         );
       }
       return html;
     }
     const chrome = `
-<style data-aquasentinel-print>
+<style data-sakiya-print>
   .print-bar {
     position: sticky; top: 0; z-index: 20;
     display: flex; gap: .6rem; align-items: center; flex-wrap: wrap;
@@ -573,13 +573,13 @@ export class SitesService {
     .card { break-inside: avoid; }
   }
 </style>
-<div class="print-bar" data-aquasentinel-print>
+<div class="print-bar" data-sakiya-print>
   <button type="button" onclick="window.print()">Save as PDF</button>
   <span class="hint">Choose “Save as PDF” / “Microsoft Print to PDF” in the print dialog.</span>
 </div>
 ${
   autoPrint
-    ? `<script data-aquasentinel-autoprint>window.addEventListener('load',()=>setTimeout(()=>window.print(),400));</script>`
+    ? `<script data-sakiya-autoprint>window.addEventListener('load',()=>setTimeout(()=>window.print(),400));</script>`
     : ''
 }`;
     if (html.includes('</body>')) {
@@ -628,7 +628,7 @@ ${
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>AquaSentinel report — ${esc(site.name)}</title>
+  <title>SAKIYA report — ${esc(site.name)}</title>
   <style>
     body { font-family: Segoe UI, system-ui, sans-serif; margin: 2rem; color: #122; }
     h1 { margin: 0 0 .25rem; }
@@ -649,11 +649,11 @@ ${
   </style>
 </head>
 <body>
-  <div class="print-bar" data-aquasentinel-print style="position:sticky;top:0;z-index:20;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin:-2rem -2rem 1.25rem;padding:.85rem 1.1rem;background:#102018;color:#e7f0e8;border-bottom:1px solid rgba(120,150,128,.35)">
+  <div class="print-bar" data-sakiya-print style="position:sticky;top:0;z-index:20;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin:-2rem -2rem 1.25rem;padding:.85rem 1.1rem;background:#102018;color:#e7f0e8;border-bottom:1px solid rgba(120,150,128,.35)">
     <button type="button" onclick="window.print()" style="background:#2f9e44;color:#fff;border:0;border-radius:8px;padding:.55rem .9rem;font-weight:650;cursor:pointer">Save as PDF</button>
     <span style="color:#9eb3a3;font-size:.85rem">Choose “Save as PDF” in the print dialog.</span>
   </div>
-  <h1>AquaSentinel monitoring report</h1>
+  <h1>SAKIYA monitoring report</h1>
   <p class="sub">${esc(site.name)} · Sentinel-2 via Planetary Computer</p>
   <p class="delta">Δ mean NDVI (later − earlier): ${esc(cmp.deltaMeanNdvi)}
     ${cmp.inspect.flag ? `<span class="flag"> · INSPECT: ${esc(cmp.inspect.reason)}</span>` : ''}

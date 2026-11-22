@@ -37,7 +37,7 @@ const NAV: {
   { to: '/cutsheetrx', labelKey: 'nav.cutsheetrx', Icon: Mountain },
 ];
 
-const STORAGE_KEY = 'aquasentinel-nav-collapsed';
+const STORAGE_KEY = 'sakiya-nav-collapsed';
 
 export default function App() {
   const { t, locale, setLocale } = useLanguage();
@@ -67,7 +67,7 @@ export default function App() {
             onClick={() => {
               if (collapsed) setCollapsed(false);
             }}
-            aria-label={collapsed ? t('nav.expand') : 'AquaSentinel'}
+            aria-label={collapsed ? t('nav.expand') : 'SAKIYA'}
             title={collapsed ? t('nav.expand') : undefined}
           >
             <img
@@ -79,7 +79,7 @@ export default function App() {
             />
             {!collapsed && (
               <span className="brand-copy">
-                <span className="brand-mark">AquaSentinel</span>
+                <span className="brand-mark">SAKIYA</span>
                 <span className="brand-tag">{t('brand.tag')}</span>
               </span>
             )}

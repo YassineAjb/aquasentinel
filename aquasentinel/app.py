@@ -20,7 +20,7 @@ def index():
 
 @app.get("/health")
 def health():
-    return jsonify({"ok": True, "service": "aquasentinel-scan"})
+    return jsonify({"ok": True, "service": "sakiya-scan"})
 
 
 @app.post("/api/scan")
@@ -63,7 +63,7 @@ def api_scenes():
 
 
 def main() -> None:
-    print("AquaSentinel analysis service")
+    print("SAKIYA analysis service")
     print("Health http://127.0.0.1:8766/health")
     print("Scan   POST http://127.0.0.1:8766/api/scan")
     app.run(host="127.0.0.1", port=8766, debug=False)

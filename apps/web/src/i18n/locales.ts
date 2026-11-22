@@ -6,7 +6,7 @@ export const LOCALES: { id: Locale; label: string; native: string; dir: 'ltr' | 
   { id: 'ja', label: '日本語', native: '日', dir: 'ltr' },
 ];
 
-export const LOCALE_STORAGE_KEY = 'aquasentinel-locale';
+export const LOCALE_STORAGE_KEY = 'sakiya-locale';
 
 type Dict = Record<string, string>;
 

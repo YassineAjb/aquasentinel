@@ -1,4 +1,4 @@
-# AquaSentinel — 48h Hackathon Build Plan
+# SAKIYA — 48h Hackathon Build Plan
 
 **Goal:** one field, end-to-end, judge-ready.  
 Site → imagery → NDVI → weather → crop profile → irrigation plan (estimate + schedule).

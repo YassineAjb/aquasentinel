@@ -1,4 +1,4 @@
-# AquaSentinel — Locked stack (Kizuna 2026)
+# SAKIYA — Locked stack (Kizuna 2026)
 
 ```text
 React (Vite) + Leaflet

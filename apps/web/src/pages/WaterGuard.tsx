@@ -78,11 +78,11 @@ export default function WaterGuard() {
 
   return <main className="wg-page">
     <header className="wg-header">
-      <div><p className="wg-eyebrow">AquaSentinel · Smart Water Management</p><h1>WaterGuard</h1><p className="wg-sub">Monitor irrigation flow and detect water loss before it becomes costly.</p></div>
+      <div><p className="wg-eyebrow">SAKIYA · Smart Water Management</p><h1>WaterGuard</h1><p className="wg-sub">Monitor irrigation flow and detect water loss before it becomes costly.</p></div>
       <div className="wg-field-select"><label htmlFor="wg-site">Agricultural field</label><select id="wg-site" value={siteId} onChange={(e) => setSiteId(e.target.value)}>{sites.map((site) => <option key={site._id} value={site._id}>{site.name}</option>)}</select></div>
     </header>
 
-    {!sites.length ? <section className="wg-empty"><Droplets size={32}/><h2>No field available</h2><p>Create a site in AquaSentinel Sites before using WaterGuard.</p></section> : <>
+    {!sites.length ? <section className="wg-empty"><Droplets size={32}/><h2>No field available</h2><p>Create a site in SAKIYA Sites before using WaterGuard.</p></section> : <>
       <div className={`wg-status-banner ${live?.status?.toLowerCase() || 'off'}`}><span className="wg-status-dot"/><div><strong>{STATUS_LABEL[live?.status || 'OFF']}</strong><p>{live?.active ? 'Irrigation session is running · simulated sensor data' : 'No active session. Start a simulation to monitor water flow.'}</p></div><span className="wg-sim-badge">SIMULATED DATA</span></div>
       <section className="wg-kpis">
         <article className="wg-kpi"><div className="wg-kpi-label"><Gauge size={17}/> Current flow</div><strong>{fmt(live?.flowRate || 0)} <small>L/min</small></strong><span>Expected {fmt(live?.expectedFlow ?? expectedFlow)} L/min</span></article>

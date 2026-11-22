@@ -66,7 +66,7 @@ export default function Landing() {
         <div className="landing-hero-media" aria-hidden />
         <div className="landing-hero-veil" aria-hidden />
         <div className="landing-stage">
-          <p className="landing-brand">AquaSentinel</p>
+          <p className="landing-brand">SAKIYA</p>
           <h1>{t('landing.headline')}</h1>
           <p className="landing-lead">{t('landing.lead')}</p>
           <div className="landing-cta">

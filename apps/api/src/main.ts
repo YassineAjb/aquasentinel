@@ -17,6 +17,6 @@ async function bootstrap() {
   );
   const port = Number(process.env.PORT) || 3000;
   await app.listen(port);
-  console.log(`AquaSentinel API http://127.0.0.1:${port}`);
+  console.log(`SAKIYA API http://127.0.0.1:${port}`);
 }
 bootstrap();

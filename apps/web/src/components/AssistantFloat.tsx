@@ -107,7 +107,7 @@ export default function AssistantFloat() {
                   <Sparkles size={18} strokeWidth={2} />
                 </span>
                 <div>
-                  <p className="eyebrow">AquaSentinel</p>
+                  <p className="eyebrow">SAKIYA</p>
                   <h2>{t('assistant.title')}</h2>
                 </div>
               </div>

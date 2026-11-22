@@ -44,7 +44,7 @@ const buildSystem = (lang: LangCode, report: unknown, passages: Passage[]) => {
   if (rapport.length > MAX_REPORT_CHARS) rapport = rapport.slice(0, MAX_REPORT_CHARS) + '\n... (truncated)';
   const contexte =
     passages.map((p, i) => `[${i + 1}] (${p.source})\n${p.text}`).join('\n\n') || '(none)';
-  return `You are AquaSentinel's field assistant. You help a farmer understand a plot report (Sentinel-2, NDVI, weather).
+  return `You are SAKIYA's field assistant. You help a farmer understand a plot report (Sentinel-2, NDVI, weather).
 
 ${LANG_RULE[lang]}
 

@@ -103,7 +103,7 @@ export class SitesController {
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Cache-Control', 'public, max-age=3600');
     if (variant === 'enhanced') {
-      res.setHeader('X-AquaSentinel-Visual', 'derived-enhanced');
+      res.setHeader('X-Sakiya-Visual', 'derived-enhanced');
     }
     res.send(buf);
   }

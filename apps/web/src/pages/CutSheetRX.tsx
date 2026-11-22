@@ -8,7 +8,7 @@ import type { Locale } from '../i18n/locales';
 
 export const CUTSHEETRX_URL = 'https://www.senterfarms.com/programs/csrx/';
 const EMBED_SRC = '/csrx-embed/';
-const SITE_KEY = 'aquasentinel-csrx-site';
+const SITE_KEY = 'sakiya-csrx-site';
 
 type CsrxWindow = Window & {
   L?: {
@@ -29,7 +29,10 @@ type CsrxWindow = Window & {
     removeLayer: (layer: unknown) => void;
     getZoom: () => number;
   };
+  /** Injected by vite csrx-embed plugin — loads polygon into CutSheetRX field tool */
+  __AQUA_LOAD_FIELD__?: (latlngs: [number, number][]) => boolean;
   __AQUA_SITE_LAYER__?: unknown;
+  __AQUA_LOADED_SITE__?: string;
 };
 
 function ringLatLngs(site: Site): [number, number][] {
@@ -60,82 +63,66 @@ function rememberView(lat: number, lng: number, z = 16) {
   }
 }
 
-/** Pan/zoom embed map to a site and outline its boundary. */
-function focusSiteOnMap(win: CsrxWindow, doc: Document, site: Site): boolean {
+/** Load our saved site polygon into CutSheetRX as the field area (no re-draw). */
+function focusSiteOnMap(win: CsrxWindow, _doc: Document, site: Site): boolean {
   const latlngs = ringLatLngs(site);
   const center = siteCenter(site);
-  let moved = false;
+  if (latlngs.length < 3) {
+    rememberView(center.lat, center.lng, 16);
+    return false;
+  }
+
+  // Skip duplicate load for same site (cfLoad is expensive)
+  if (win.__AQUA_LOADED_SITE__ === site._id && win.__AQUA_LOAD_FIELD__) {
+    try {
+      win.__AQUA_CSR_MAP__?.invalidateSize();
+    } catch {
+      /* ignore */
+    }
+    return true;
+  }
 
   try {
     const map = win.__AQUA_CSR_MAP__;
+    map?.invalidateSize();
+
+    // Prefer native CutSheetRX field loader (draws + runs LiDAR field pipeline)
+    if (typeof win.__AQUA_LOAD_FIELD__ === 'function') {
+      const ok = win.__AQUA_LOAD_FIELD__(latlngs);
+      if (ok) {
+        win.__AQUA_LOADED_SITE__ = site._id;
+        rememberView(center.lat, center.lng, map?.getZoom?.() ?? 16);
+        return true;
+      }
+    }
+
+    // Fallback: outline only if hook not ready yet
     const L = win.L;
-    if (map) {
-      map.invalidateSize();
+    if (map && L) {
       if (win.__AQUA_SITE_LAYER__) {
         try {
           map.removeLayer(win.__AQUA_SITE_LAYER__);
         } catch {
           /* ignore */
         }
-        win.__AQUA_SITE_LAYER__ = undefined;
       }
-      if (L && latlngs.length >= 3) {
-        const layer = L.polygon(latlngs, {
-          color: '#2f9e44',
-          weight: 2.5,
-          fillColor: '#2f9e44',
-          fillOpacity: 0.18,
-        }).addTo(map);
-        win.__AQUA_SITE_LAYER__ = layer;
-        const bounds = L.latLngBounds(latlngs);
-        map.fitBounds(bounds, { padding: [56, 56], maxZoom: 17 });
-        rememberView(bounds.getCenter().lat, bounds.getCenter().lng, map.getZoom());
-      } else {
-        map.setView([center.lat, center.lng], 16);
-        rememberView(center.lat, center.lng, 16);
-      }
-      moved = true;
-    }
-  } catch {
-    /* fall through to search form */
-  }
-
-  // Also drive the built-in Go To box (works even if map hook is late)
-  try {
-    const input = doc.getElementById('q') as HTMLInputElement | null;
-    const goBtn = doc.getElementById('goBtn') as HTMLButtonElement | null;
-    if (input) {
-      const value = `${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`;
-      const setter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        'value',
-      )?.set;
-      if (setter) setter.call(input, value);
-      else input.value = value;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-      const form =
-        (doc.getElementById('searchForm') as HTMLFormElement | null) ||
-        input.closest('form');
-      if (form && typeof form.requestSubmit === 'function') {
-        form.requestSubmit(goBtn ?? undefined);
-      } else if (form) {
-        form.dispatchEvent(
-          new Event('submit', { bubbles: true, cancelable: true }),
-        );
-      } else {
-        goBtn?.click();
-      }
-      moved = true;
+      win.__AQUA_SITE_LAYER__ = L.polygon(latlngs, {
+        color: '#ffd84d',
+        weight: 2.5,
+        fillColor: '#2f9e44',
+        fillOpacity: 0.12,
+      }).addTo(map);
+      const bounds = L.latLngBounds(latlngs);
+      map.fitBounds(bounds, { padding: [56, 56], maxZoom: 17 });
+      rememberView(bounds.getCenter().lat, bounds.getCenter().lng, map.getZoom());
+      return true;
     }
   } catch {
     /* ignore */
   }
 
-  if (!moved) {
-    rememberView(center.lat, center.lng, 16);
-  }
-  return moved;
+  rememberView(center.lat, center.lng, 16);
+  return false;
 }
 
 export default function CutSheetRX() {
@@ -161,20 +148,22 @@ export default function CutSheetRX() {
       .listSites()
       .then((list) => {
         if (cancelled) return;
-        setSites(list);
+        const rows = Array.isArray(list) ? list : [];
+        setSites(rows);
         let initial = '';
         try {
           initial = localStorage.getItem(SITE_KEY) || '';
         } catch {
           /* ignore */
         }
-        if (initial && list.some((s) => s._id === initial)) {
+        if (initial && rows.some((s) => s._id === initial)) {
           setSiteId(initial);
-        } else if (list[0]) {
-          setSiteId(list[0]._id);
+        } else if (rows[0]) {
+          setSiteId(rows[0]._id);
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('[CutSheetRX] listSites failed', err);
         if (!cancelled) setSites([]);
       });
     return () => {
@@ -305,7 +294,7 @@ export default function CutSheetRX() {
 
             <div className="csrx-brand-cover" aria-hidden>
               <div className="csrx-brand-cover-inner">
-                <span className="csrx-brand-cover-mark">AquaSentinel</span>
+                <span className="csrx-brand-cover-mark">SAKIYA</span>
                 <span className="csrx-brand-cover-tag">{t('csrx.tag')}</span>
               </div>
             </div>

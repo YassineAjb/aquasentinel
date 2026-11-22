@@ -30,7 +30,7 @@ export class HealthController {
     }
     return {
       ok: true,
-      service: 'aquasentinel-api',
+      service: 'sakiya-api',
       mongo: 'configured',
       python,
     };
