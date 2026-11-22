@@ -1,9 +1,25 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000';
 
+let authToken: string | null = null;
+
+export function setAuthToken(token: string | null) {
+  authToken = token;
+}
+
+export function getAuthToken() {
+  return authToken;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+  if (authToken) headers.Authorization = `Bearer ${authToken}`;
+
   const res = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) },
     ...init,
+    headers,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -15,6 +31,31 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   return data as T;
 }
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  name: string;
+};
+
+export type AuthResponse = {
+  token: string;
+  user: AuthUser;
+};
+
+export const authApi = {
+  register: (name: string, email: string, password: string) =>
+    request<AuthResponse>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password }),
+    }),
+  login: (email: string, password: string) =>
+    request<AuthResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    }),
+  me: () => request<AuthUser>('/auth/me'),
+};
 
 export type Site = {
   _id: string;

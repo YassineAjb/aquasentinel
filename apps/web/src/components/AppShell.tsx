@@ -2,6 +2,7 @@ import { useEffect, useState, type ComponentType } from 'react';
 import {
   ChartSpline,
   LayoutDashboard,
+  LogOut,
   MapPinned,
   Moon,
   Mountain,
@@ -10,7 +11,8 @@ import {
   Sun,
   type LucideProps,
 } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth';
 import AssistantFloat from './AssistantFloat';
 import FlagIcon from './FlagIcon';
 import { LOCALES, useLanguage, type Locale } from '../i18n';
@@ -35,6 +37,8 @@ const STORAGE_KEY = 'sakiya-nav-collapsed';
 export default function AppShell() {
   const { t, locale, setLocale } = useLanguage();
   const { theme, setTheme } = useTheme();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(STORAGE_KEY) === '1';
@@ -147,6 +151,24 @@ export default function AppShell() {
               {!collapsed && <span>{t('nav.themeDark')}</span>}
             </button>
           </div>
+          {(user || !collapsed) && (
+            <button
+              type="button"
+              className="app-lang-btn app-logout-btn"
+              title={t('auth.logout')}
+              onClick={() => {
+                logout();
+                navigate('/login', { replace: true });
+              }}
+            >
+              <LogOut size={15} strokeWidth={2} aria-hidden />
+              {!collapsed && (
+                <span className="app-logout-label">
+                  {user?.name || t('auth.logout')}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </aside>
       <div className="app-main">

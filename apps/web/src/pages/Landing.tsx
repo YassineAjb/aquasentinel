@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import {
   ArrowRight,
   ChartSpline,
@@ -9,6 +9,7 @@ import {
   Sun,
   Zap,
 } from 'lucide-react';
+import { useAuth } from '../auth';
 import LanguageSelect from '../components/LanguageSelect';
 import { useLanguage } from '../i18n';
 import { useTheme } from '../theme';
@@ -26,6 +27,11 @@ const STEPS = ['map', 'scan', 'decide'] as const;
 export default function Landing() {
   const { t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const { user, ready } = useAuth();
+
+  if (ready && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="landing-page">
@@ -60,7 +66,10 @@ export default function Landing() {
             )}
           </button>
 
-          <Link className="primary inline landing-start" to="/dashboard">
+          <Link className="landing-login" to="/login">
+            {t('auth.loginLink')}
+          </Link>
+          <Link className="primary inline landing-start" to="/signup">
             <span>{t('landing.start')}</span>
             <ArrowRight size={15} strokeWidth={2.4} aria-hidden />
           </Link>
