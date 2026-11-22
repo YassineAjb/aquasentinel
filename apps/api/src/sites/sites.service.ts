@@ -507,10 +507,126 @@ export class SitesService {
       lines.push('Not enough NDVI means to evaluate change.');
     }
     return {
-      label: 'Generated interpretation (rules from structured stats — not a diagnosis)',
+      label: 'What this means for your field',
       text: lines.join(' '),
       factsOnly: true,
+      honesty:
+        'Generated from structured NDVI stats and rules — not a medical or agronomic diagnosis.',
     };
+  }
+
+  private reportEsc(s: unknown) {
+    return String(s ?? '—')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  private reportNum(n: number | null | undefined, digits = 3) {
+    if (n == null || !Number.isFinite(n)) return '—';
+    return n.toFixed(digits);
+  }
+
+  /** Horizontal NDVI mean comparison (0–1 scale). */
+  private reportNdviBars(
+    meanA: number | null | undefined,
+    meanB: number | null | undefined,
+    dateA?: string,
+    dateB?: string,
+  ) {
+    const scale = (v: number | null | undefined) => {
+      if (v == null || !Number.isFinite(v)) return 0;
+      return Math.max(0, Math.min(100, (v / 1) * 100));
+    };
+    const aW = scale(meanA);
+    const bW = scale(meanB);
+    const esc = (s: unknown) => this.reportEsc(s);
+    return `<svg class="chart" viewBox="0 0 420 128" role="img" aria-label="NDVI mean comparison">
+  <text x="0" y="18" class="chart-title">Plant greenness (NDVI mean)</text>
+  <text x="0" y="48" class="chart-label">${esc(dateA || 'Earlier')}</text>
+  <rect x="110" y="34" width="280" height="18" rx="9" class="chart-track"/>
+  <rect x="110" y="34" width="${aW * 2.8}" height="18" rx="9" class="chart-fill-a"/>
+  <text x="400" y="48" text-anchor="end" class="chart-value">${esc(this.reportNum(meanA, 3))}</text>
+  <text x="0" y="88" class="chart-label">${esc(dateB || 'Later')}</text>
+  <rect x="110" y="74" width="280" height="18" rx="9" class="chart-track"/>
+  <rect x="110" y="74" width="${bW * 2.8}" height="18" rx="9" class="chart-fill-b"/>
+  <text x="400" y="88" text-anchor="end" class="chart-value">${esc(this.reportNum(meanB, 3))}</text>
+  <text x="110" y="118" class="chart-axis">0</text>
+  <text x="250" y="118" text-anchor="middle" class="chart-axis">0.5</text>
+  <text x="390" y="118" text-anchor="end" class="chart-axis">1.0</text>
+</svg>`;
+  }
+
+  /** Delta gauge on −0.3 … +0.3. */
+  private reportDeltaGauge(delta: number | null | undefined) {
+    const d = delta == null || !Number.isFinite(delta) ? null : delta;
+    const clamped = d == null ? 0 : Math.max(-0.3, Math.min(0.3, d));
+    const x = 40 + ((clamped + 0.3) / 0.6) * 340;
+    const tone =
+      d == null ? 'neutral' : d <= -0.08 ? 'bad' : d < 0 ? 'warn' : 'good';
+    const label =
+      d == null
+        ? '—'
+        : `${d > 0 ? '+' : ''}${d.toFixed(3)}`;
+    return `<svg class="chart gauge" viewBox="0 0 420 100" role="img" aria-label="NDVI change">
+  <text x="0" y="18" class="chart-title">Change in greenness (later − earlier)</text>
+  <rect x="40" y="42" width="340" height="14" rx="7" class="chart-track"/>
+  <rect x="40" y="42" width="170" height="14" rx="0" class="gauge-neg"/>
+  <rect x="210" y="42" width="170" height="14" rx="0" class="gauge-pos"/>
+  <line x1="210" y1="36" x2="210" y2="62" class="gauge-zero"/>
+  <circle cx="${x}" cy="49" r="9" class="gauge-knob gauge-${tone}"/>
+  <text x="40" y="80" class="chart-axis">−0.3</text>
+  <text x="210" y="80" text-anchor="middle" class="chart-axis">0</text>
+  <text x="380" y="80" text-anchor="end" class="chart-axis">+0.3</text>
+  <text x="400" y="54" text-anchor="end" class="chart-value gauge-${tone}">${this.reportEsc(label)}</text>
+</svg>`;
+  }
+
+  /** Min / mean / max range for one date. */
+  private reportRangeBars(
+    title: string,
+    min?: number | null,
+    mean?: number | null,
+    max?: number | null,
+  ) {
+    const row = (label: string, v: number | null | undefined, cls: string) => {
+      const w =
+        v == null || !Number.isFinite(v)
+          ? 0
+          : Math.max(0, Math.min(100, v * 100));
+      return `<div class="range-row">
+  <span>${this.reportEsc(label)}</span>
+  <div class="range-track"><div class="range-fill ${cls}" style="width:${w}%"></div></div>
+  <strong>${this.reportEsc(this.reportNum(v, 3))}</strong>
+</div>`;
+    };
+    return `<div class="card range-card">
+  <h4>${this.reportEsc(title)}</h4>
+  ${row('Min', min, 'r-min')}
+  ${row('Mean', mean, 'r-mean')}
+  ${row('Max', max, 'r-max')}
+</div>`;
+  }
+
+  private reportCloudBars(
+    cloudA?: number | null,
+    cloudB?: number | null,
+    dateA?: string,
+    dateB?: string,
+  ) {
+    const w = (v?: number | null) =>
+      v == null || !Number.isFinite(v) ? 0 : Math.max(0, Math.min(100, v));
+    return `<svg class="chart" viewBox="0 0 420 110" role="img" aria-label="Cloud cover comparison">
+  <text x="0" y="18" class="chart-title">Cloud cover on scene day</text>
+  <text x="0" y="48" class="chart-label">${this.reportEsc(dateA || 'Earlier')}</text>
+  <rect x="110" y="34" width="280" height="18" rx="9" class="chart-track"/>
+  <rect x="110" y="34" width="${w(cloudA) * 2.8}" height="18" rx="9" class="chart-fill-cloud"/>
+  <text x="400" y="48" text-anchor="end" class="chart-value">${this.reportEsc(cloudA != null ? `${cloudA}%` : '—')}</text>
+  <text x="0" y="88" class="chart-label">${this.reportEsc(dateB || 'Later')}</text>
+  <rect x="110" y="74" width="280" height="18" rx="9" class="chart-track"/>
+  <rect x="110" y="74" width="${w(cloudB) * 2.8}" height="18" rx="9" class="chart-fill-cloud"/>
+  <text x="400" y="88" text-anchor="end" class="chart-value">${this.reportEsc(cloudB != null ? `${cloudB}%` : '—')}</text>
+</svg>`;
   }
 
   async listReports(siteId: string) {
@@ -618,83 +734,325 @@ ${
       truecolor: await toDataUrl(bId, 'truecolor'),
       ndvi: await toDataUrl(bId, 'ndvi'),
     };
-    const esc = (s: unknown) =>
-      String(s ?? '—')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    const esc = (s: unknown) => this.reportEsc(s);
+    const delta = cmp.deltaMeanNdvi as number | null;
+    const deltaLabel =
+      delta == null
+        ? '—'
+        : `${delta > 0 ? '+' : ''}${Number(delta).toFixed(3)}`;
+    const deltaTone =
+      delta == null ? 'neutral' : delta <= -0.08 ? 'bad' : delta < 0 ? 'warn' : 'good';
+    const actionLabel = cmp.inspect.flag
+      ? 'Check the field'
+      : delta != null && delta < 0
+        ? 'Keep watching'
+        : 'Looking stable';
+    const interpHonesty =
+      (cmp.interpretation as { honesty?: string })?.honesty ||
+      'Generated from structured NDVI stats and rules — not a diagnosis.';
 
     const html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SAKIYA report — ${esc(site.name)}</title>
   <style>
-    body { font-family: Segoe UI, system-ui, sans-serif; margin: 2rem; color: #122; }
-    h1 { margin: 0 0 .25rem; }
-    .sub { color: #456; margin-bottom: 1.25rem; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .card { border: 1px solid #ccd; border-radius: 10px; padding: 1rem; }
-    img { max-width: 100%; border-radius: 8px; background: #111; }
-    .meta { font-size: .9rem; line-height: 1.5; }
-    .delta { font-size: 1.2rem; font-weight: 700; margin: 1rem 0; }
-    .warn { color: #a60; }
-    .flag { color: #a20; font-weight: 700; }
-    footer { margin-top: 1.5rem; font-size: .8rem; color: #678; }
+    :root {
+      --bg: #f4f7f4;
+      --card: #fff;
+      --text: #14241a;
+      --muted: #4a6354;
+      --line: rgba(40,70,50,.14);
+      --accent: #2f9e44;
+      --accent-soft: #e7f6ea;
+      --warn: #9a5b00;
+      --bad: #a13d1a;
+      --good: #176b2c;
+      --shadow: 0 14px 36px rgba(20,40,28,.1);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 420px at 10% -10%, rgba(47,158,68,.12), transparent 55%),
+        var(--bg);
+      line-height: 1.45;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 1.25rem 1.25rem 2.5rem; }
+    .print-bar {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; gap: .65rem; align-items: center; flex-wrap: wrap;
+      margin: 0 0 1.25rem; padding: .85rem 1rem;
+      background: #102018; color: #e7f0e8;
+      border-radius: 12px;
+    }
+    .print-bar button {
+      background: var(--accent); color: #fff; border: 0; border-radius: 8px;
+      padding: .55rem .95rem; font-weight: 650; cursor: pointer;
+    }
+    .print-bar span { color: #9eb3a3; font-size: .85rem; }
+    .hero {
+      display: grid; gap: 1rem;
+      grid-template-columns: 1.4fr .9fr;
+      margin-bottom: 1.1rem;
+    }
+    .hero-main, .hero-side, .card, .ai-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+    .hero-main { padding: 1.25rem 1.35rem; }
+    .eyebrow {
+      margin: 0 0 .35rem;
+      font-size: .72rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--accent);
+    }
+    h1 { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); letter-spacing: -.03em; }
+    .sub { margin: .4rem 0 0; color: var(--muted); }
+    .kpis {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem;
+      margin-top: 1rem;
+    }
+    .kpi {
+      padding: .75rem .8rem; border-radius: 12px;
+      background: #f7faf7; border: 1px solid var(--line);
+    }
+    .kpi span { display: block; font-size: .72rem; color: var(--muted); font-weight: 650; }
+    .kpi strong { display: block; margin-top: .2rem; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+    .kpi.tone-good strong { color: var(--good); }
+    .kpi.tone-warn strong { color: var(--warn); }
+    .kpi.tone-bad strong { color: var(--bad); }
+    .hero-side { padding: 1.1rem 1.15rem; display: flex; flex-direction: column; justify-content: center; gap: .55rem; }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: .4rem;
+      width: fit-content; padding: .4rem .7rem; border-radius: 999px;
+      font-weight: 750; font-size: .85rem;
+    }
+    .status-pill.good { background: #e5f6ea; color: var(--good); }
+    .status-pill.warn { background: #fff1d6; color: var(--warn); }
+    .status-pill.bad { background: #fde8e1; color: var(--bad); }
+    .status-pill.neutral { background: #eef2ef; color: var(--muted); }
+    .hero-side p { margin: 0; color: var(--muted); font-size: .9rem; }
+    .ai-card {
+      margin-bottom: 1.1rem; padding: 1.15rem 1.25rem;
+      border-color: rgba(47,158,68,.28);
+      background: linear-gradient(160deg, #f3fbf5, #fff 55%);
+    }
+    .ai-card h2 { margin: 0 0 .45rem; font-size: 1.15rem; }
+    .ai-card .lead { margin: 0; font-size: 1.02rem; color: var(--text); }
+    .ai-meta {
+      margin: .75rem 0 0; padding: .55rem .7rem; border-radius: 10px;
+      background: rgba(47,158,68,.08); color: var(--muted); font-size: .8rem;
+    }
+    .evidence { margin: .85rem 0 0; padding: 0; list-style: none; display: grid; gap: .4rem; }
+    .evidence li {
+      display: grid; grid-template-columns: 18px 1fr; gap: .45rem;
+      padding: .55rem .65rem; border-radius: 10px; background: #f7faf7;
+      border: 1px solid var(--line); font-size: .88rem;
+    }
+    .evidence li::before { content: "•"; color: var(--accent); font-weight: 800; }
+    .section { margin: 1.15rem 0; }
+    .section h2 { margin: 0 0 .7rem; font-size: 1.05rem; }
+    .charts {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .85rem;
+    }
+    .chart-card { padding: .9rem 1rem; }
+    .chart { width: 100%; height: auto; display: block; }
+    .chart-title { fill: var(--muted); font-size: 12px; font-weight: 700; }
+    .chart-label { fill: var(--text); font-size: 11px; font-weight: 650; }
+    .chart-value { fill: var(--text); font-size: 12px; font-weight: 750; }
+    .chart-axis { fill: #7a8b80; font-size: 10px; }
+    .chart-track { fill: #e7eee8; }
+    .chart-fill-a { fill: #7dbe8a; }
+    .chart-fill-b { fill: #2f9e44; }
+    .chart-fill-cloud { fill: #6b8cae; }
+    .gauge-neg { fill: rgba(161,61,26,.18); }
+    .gauge-pos { fill: rgba(47,158,68,.18); }
+    .gauge-zero { stroke: #8aa090; stroke-width: 1.5; }
+    .gauge-knob { fill: #2f9e44; stroke: #fff; stroke-width: 2; }
+    .gauge-knob.gauge-bad { fill: var(--bad); }
+    .gauge-knob.gauge-warn { fill: #d08900; }
+    .gauge-knob.gauge-neutral { fill: #7a8b80; }
+    .chart-value.gauge-bad { fill: var(--bad); }
+    .chart-value.gauge-warn { fill: var(--warn); }
+    .chart-value.gauge-good { fill: var(--good); }
+    .ranges { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; margin-top: .85rem; }
+    .range-card { padding: .9rem 1rem; }
+    .range-card h4 { margin: 0 0 .65rem; font-size: .88rem; }
+    .range-row {
+      display: grid; grid-template-columns: 48px 1fr 52px;
+      gap: .5rem; align-items: center; margin-bottom: .4rem;
+      font-size: .8rem;
+    }
+    .range-track { height: 10px; border-radius: 999px; background: #e7eee8; overflow: hidden; }
+    .range-fill { height: 100%; border-radius: 999px; }
+    .range-fill.r-min { background: #c4a35a; }
+    .range-fill.r-mean { background: #2f9e44; }
+    .range-fill.r-max { background: #1f6b35; }
+    .range-row strong { text-align: right; font-variant-numeric: tabular-nums; }
+    .scenes { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+    .scene { padding: 1rem; }
+    .scene h3 { margin: 0 0 .35rem; font-size: 1rem; }
+    .scene .meta { margin: 0 0 .75rem; color: var(--muted); font-size: .85rem; }
+    .scene .stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem;
+      margin-bottom: .75rem;
+    }
+    .scene .stats div {
+      padding: .45rem .5rem; border-radius: 9px; background: #f7faf7;
+      border: 1px solid var(--line); text-align: center;
+    }
+    .scene .stats span { display: block; font-size: .68rem; color: var(--muted); font-weight: 650; }
+    .scene .stats strong { font-size: .92rem; font-variant-numeric: tabular-nums; }
+    .media { display: grid; gap: .65rem; }
+    .media figure { margin: 0; }
+    .media figcaption {
+      margin: 0 0 .3rem; font-size: .72rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+    }
+    img {
+      width: 100%; border-radius: 10px; background: #111; display: block;
+      border: 1px solid var(--line);
+    }
+    .warn { color: var(--warn); font-size: .85rem; }
+    footer.report-foot {
+      margin-top: 1.25rem; padding: .9rem 1rem; border-radius: 12px;
+      border: 1px solid var(--line); background: #fff;
+      color: var(--muted); font-size: .8rem;
+    }
+    @media (max-width: 800px) {
+      .hero, .charts, .ranges, .scenes { grid-template-columns: 1fr; }
+      .kpis { grid-template-columns: 1fr; }
+    }
     @media print {
       .print-bar { display: none !important; }
-      body { margin: 1rem; }
-      .card { break-inside: avoid; }
+      body { background: #fff; }
+      .hero-main, .hero-side, .card, .ai-card, .scene, .chart-card, .range-card {
+        box-shadow: none; break-inside: avoid;
+      }
+      .wrap { padding: .5rem; max-width: none; }
     }
   </style>
 </head>
 <body>
-  <div class="print-bar" data-sakiya-print style="position:sticky;top:0;z-index:20;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin:-2rem -2rem 1.25rem;padding:.85rem 1.1rem;background:#102018;color:#e7f0e8;border-bottom:1px solid rgba(120,150,128,.35)">
-    <button type="button" onclick="window.print()" style="background:#2f9e44;color:#fff;border:0;border-radius:8px;padding:.55rem .9rem;font-weight:650;cursor:pointer">Save as PDF</button>
-    <span style="color:#9eb3a3;font-size:.85rem">Choose “Save as PDF” in the print dialog.</span>
-  </div>
-  <h1>SAKIYA monitoring report</h1>
-  <p class="sub">${esc(site.name)} · Sentinel-2 via Planetary Computer</p>
-  <p class="delta">Δ mean NDVI (later − earlier): ${esc(cmp.deltaMeanNdvi)}
-    ${cmp.inspect.flag ? `<span class="flag"> · INSPECT: ${esc(cmp.inspect.reason)}</span>` : ''}
-  </p>
-  <div class="card" style="margin-bottom:1rem">
-    <h2>${esc(cmp.interpretation.label)}</h2>
-    <p class="meta">${esc(cmp.interpretation.text)}</p>
-    <ul class="meta">
-      ${(cmp.inspect.evidence || []).map((e: string) => `<li>${esc(e)}</li>`).join('')}
-    </ul>
-  </div>
-  <div class="grid">
-    <div class="card">
-      <h2>Earlier — ${esc(cmp.a.acquiredAt)}</h2>
-      <p class="meta">
-        Sensor: ${esc(cmp.a.sensor)}<br/>
-        Cloud: ${esc(cmp.a.cloudCover)}%<br/>
-        NDVI mean/min/max: ${esc(cmp.a.mean)} / ${esc(cmp.a.min)} / ${esc(cmp.a.max)}<br/>
-        Scene: ${esc(cmp.a.sceneId)}
-        ${cmp.a.coverage.message ? `<br/><span class="warn">${esc(cmp.a.coverage.message)}</span>` : ''}
-      </p>
-      ${imgA.truecolor ? `<p>True color</p><img src="${imgA.truecolor}" alt="truecolor A" />` : '<p class="warn">No true-color stored</p>'}
-      ${imgA.ndvi ? `<p>NDVI</p><img src="${imgA.ndvi}" alt="ndvi A" />` : '<p class="warn">No NDVI overlay stored</p>'}
+  <div class="wrap">
+    <div class="print-bar" data-sakiya-print>
+      <button type="button" onclick="window.print()">Save as PDF</button>
+      <span>Choose “Save as PDF” in the print dialog.</span>
     </div>
-    <div class="card">
-      <h2>Later — ${esc(cmp.b.acquiredAt)}</h2>
-      <p class="meta">
-        Sensor: ${esc(cmp.b.sensor)}<br/>
-        Cloud: ${esc(cmp.b.cloudCover)}%<br/>
-        NDVI mean/min/max: ${esc(cmp.b.mean)} / ${esc(cmp.b.min)} / ${esc(cmp.b.max)}<br/>
-        Scene: ${esc(cmp.b.sceneId)}
-        ${cmp.b.coverage.message ? `<br/><span class="warn">${esc(cmp.b.coverage.message)}</span>` : ''}
-      </p>
-      ${imgB.truecolor ? `<p>True color</p><img src="${imgB.truecolor}" alt="truecolor B" />` : '<p class="warn">No true-color stored</p>'}
-      ${imgB.ndvi ? `<p>NDVI</p><img src="${imgB.ndvi}" alt="ndvi B" />` : '<p class="warn">No NDVI overlay stored</p>'}
-    </div>
+
+    <header class="hero">
+      <div class="hero-main">
+        <p class="eyebrow">SAKIYA field report</p>
+        <h1>${esc(site.name)}</h1>
+        <p class="sub">Comparing ${esc(cmp.a.acquiredAt)} → ${esc(cmp.b.acquiredAt)} · Sentinel-2 via Planetary Computer</p>
+        <div class="kpis">
+          <div class="kpi">
+            <span>Earlier greenness</span>
+            <strong>${esc(this.reportNum(cmp.a.mean, 3))}</strong>
+          </div>
+          <div class="kpi">
+            <span>Later greenness</span>
+            <strong>${esc(this.reportNum(cmp.b.mean, 3))}</strong>
+          </div>
+          <div class="kpi tone-${deltaTone}">
+            <span>Change (Δ NDVI)</span>
+            <strong>${esc(deltaLabel)}</strong>
+          </div>
+        </div>
+      </div>
+      <aside class="hero-side">
+        <div class="status-pill ${cmp.inspect.flag ? 'bad' : deltaTone}">${esc(actionLabel)}</div>
+        <p>${cmp.inspect.flag ? esc(cmp.inspect.reason) : 'Use the charts and scene photos below to confirm what changed between the two clear days.'}</p>
+      </aside>
+    </header>
+
+    <section class="ai-card">
+      <p class="eyebrow">AI interpretation</p>
+      <h2>${esc(cmp.interpretation.label)}</h2>
+      <p class="lead">${esc(cmp.interpretation.text)}</p>
+      <p class="ai-meta">${esc(interpHonesty)}</p>
+      ${(cmp.inspect.evidence || []).length
+        ? `<ul class="evidence">${(cmp.inspect.evidence || [])
+            .map((e: string) => `<li>${esc(e)}</li>`)
+            .join('')}</ul>`
+        : ''}
+    </section>
+
+    <section class="section">
+      <h2>Diagrams</h2>
+      <div class="charts">
+        <div class="card chart-card">
+          ${this.reportNdviBars(cmp.a.mean, cmp.b.mean, cmp.a.acquiredAt, cmp.b.acquiredAt)}
+        </div>
+        <div class="card chart-card">
+          ${this.reportDeltaGauge(delta)}
+        </div>
+        <div class="card chart-card" style="grid-column:1/-1">
+          ${this.reportCloudBars(cmp.a.cloudCover, cmp.b.cloudCover, cmp.a.acquiredAt, cmp.b.acquiredAt)}
+        </div>
+      </div>
+      <div class="ranges">
+        ${this.reportRangeBars(`Earlier range · ${cmp.a.acquiredAt || 'A'}`, cmp.a.min, cmp.a.mean, cmp.a.max)}
+        ${this.reportRangeBars(`Later range · ${cmp.b.acquiredAt || 'B'}`, cmp.b.min, cmp.b.mean, cmp.b.max)}
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Scene evidence</h2>
+      <div class="scenes">
+        <article class="card scene">
+          <h3>Earlier · ${esc(cmp.a.acquiredAt)}</h3>
+          <p class="meta">${esc(cmp.a.sensor)} · cloud ${esc(cmp.a.cloudCover)}% · ${esc(cmp.a.sceneId)}</p>
+          <div class="stats">
+            <div><span>Mean</span><strong>${esc(this.reportNum(cmp.a.mean, 3))}</strong></div>
+            <div><span>Min</span><strong>${esc(this.reportNum(cmp.a.min, 3))}</strong></div>
+            <div><span>Max</span><strong>${esc(this.reportNum(cmp.a.max, 3))}</strong></div>
+          </div>
+          ${cmp.a.coverage.message ? `<p class="warn">${esc(cmp.a.coverage.message)}</p>` : ''}
+          <div class="media">
+            <figure>
+              <figcaption>Natural look</figcaption>
+              ${imgA.truecolor ? `<img src="${imgA.truecolor}" alt="True color earlier" />` : '<p class="warn">No true-color stored</p>'}
+            </figure>
+            <figure>
+              <figcaption>Greenness map</figcaption>
+              ${imgA.ndvi ? `<img src="${imgA.ndvi}" alt="NDVI earlier" />` : '<p class="warn">No NDVI overlay stored</p>'}
+            </figure>
+          </div>
+        </article>
+        <article class="card scene">
+          <h3>Later · ${esc(cmp.b.acquiredAt)}</h3>
+          <p class="meta">${esc(cmp.b.sensor)} · cloud ${esc(cmp.b.cloudCover)}% · ${esc(cmp.b.sceneId)}</p>
+          <div class="stats">
+            <div><span>Mean</span><strong>${esc(this.reportNum(cmp.b.mean, 3))}</strong></div>
+            <div><span>Min</span><strong>${esc(this.reportNum(cmp.b.min, 3))}</strong></div>
+            <div><span>Max</span><strong>${esc(this.reportNum(cmp.b.max, 3))}</strong></div>
+          </div>
+          ${cmp.b.coverage.message ? `<p class="warn">${esc(cmp.b.coverage.message)}</p>` : ''}
+          <div class="media">
+            <figure>
+              <figcaption>Natural look</figcaption>
+              ${imgB.truecolor ? `<img src="${imgB.truecolor}" alt="True color later" />` : '<p class="warn">No true-color stored</p>'}
+            </figure>
+            <figure>
+              <figcaption>Greenness map</figcaption>
+              ${imgB.ndvi ? `<img src="${imgB.ndvi}" alt="NDVI later" />` : '<p class="warn">No NDVI overlay stored</p>'}
+            </figure>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <footer class="report-foot">
+      Provenance: ${esc(cmp.provenance.provider)} · ${esc(cmp.provenance.sensor)} ·
+      ${esc(cmp.provenance.measurement)}. ${esc(cmp.provenance.display)}.
+    </footer>
   </div>
-  <footer>
-    Provenance: ${esc(cmp.provenance.provider)} · ${esc(cmp.provenance.sensor)} ·
-    ${esc(cmp.provenance.measurement)}. ${esc(cmp.provenance.display)}.
-  </footer>
 </body>
 </html>`;
 
