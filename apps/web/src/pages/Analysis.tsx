@@ -25,6 +25,7 @@ import {
   Sparkles,
   Sprout,
   Thermometer,
+  X,
   Zap,
   type LucideIcon,
 } from 'lucide-react';
@@ -100,6 +101,38 @@ function EmptyHint({
       <span>{text}</span>
     </div>
   );
+}
+
+function formatPlanDate(iso: string) {
+  const d = new Date(`${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function waterActionLabel(action: string) {
+  switch (action) {
+    case 'irrigate':
+      return 'Water the field';
+    case 'skip':
+      return 'No watering';
+    case 'inspect':
+      return 'Check the crop first';
+    default:
+      return action;
+  }
+}
+
+function pumpQualityLabel(quality: string, startHour?: number, endHour?: number) {
+  if (quality === 'soft' && startHour != null && endHour != null) {
+    return `${String(startHour).padStart(2, '0')}:00–${String(endHour).padStart(2, '0')}:00`;
+  }
+  if (quality === 'skip') return 'Skip pumping';
+  if (quality === 'blocked') return 'Paused — check crop';
+  return quality;
 }
 
 export default function Analysis() {
@@ -194,6 +227,7 @@ export default function Analysis() {
   const [irrigation, setIrrigation] = useState<IrrigationPlan | null>(null);
   const [irrigationError, setIrrigationError] = useState('');
   const [irrigationBusy, setIrrigationBusy] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
   const [reports, setReports] = useState<
     {
       _id: string;
@@ -446,23 +480,33 @@ export default function Analysis() {
 
         <div className="float-dock-actions">
           <button
-            className="primary"
+            className="primary scan-action-btn"
             type="button"
-            disabled={!site}
+            disabled={!site || statusKind === 'busy'}
             onClick={() => runScan(false)}
           >
-            <Satellite size={15} strokeWidth={2} aria-hidden />
-            Scan now
+            <span className="scan-action-main">
+              <Satellite size={15} strokeWidth={2} aria-hidden />
+              Scan now
+            </span>
+            <span className="scan-action-date">Newest clear day</span>
           </button>
           <button
-            className="ghost"
+            className="ghost scan-action-btn"
             type="button"
-            disabled={!site}
+            disabled={!site || statusKind === 'busy'}
             onClick={() => runScan(true)}
             title="Fetch an earlier clear day you have not scanned yet"
           >
-            <History size={15} strokeWidth={2} aria-hidden />
-            Earlier day
+            <span className="scan-action-main">
+              <History size={15} strokeWidth={2} aria-hidden />
+              Earlier day
+            </span>
+            <span className="scan-action-date">
+              {observations[1]?.acquiredAt
+                ? `Next older: ${formatPlanDate(observations[1].acquiredAt)}`
+                : 'Older clear day'}
+            </span>
           </button>
         </div>
 
@@ -733,10 +777,12 @@ export default function Analysis() {
                         observation?._id,
                       );
                       setIrrigation(plan);
+                      setPlanOpen(true);
                       setStatus('Watering plan ready.');
                       setStatusKind('ok');
                     } catch (err) {
                       setIrrigation(null);
+                      setPlanOpen(false);
                       setIrrigationError(
                         err instanceof Error
                           ? err.message
@@ -767,7 +813,7 @@ export default function Analysis() {
                 <EmptyHint
                   icon={Droplets}
                   title="No watering plan yet"
-                  text="Tap Make a plan for a simple schedule based on your crop and recent conditions."
+                  text="Tap Make a plan for a simple 7-day schedule based on your crop and recent conditions."
                 />
               )}
               {irrigation && (
@@ -780,108 +826,19 @@ export default function Analysis() {
                   <StatRow
                     icon={CalendarDays}
                     label="Next 7 days"
-                    value={
-                      <>
-                        {irrigation.estimate.need7Mm} mm ·{' '}
-                        {irrigation.estimate.need7M3} m³
-                      </>
-                    }
+                    value={`${irrigation.estimate.need7Mm} mm`}
                   />
-                  <StatRow
-                    icon={Droplets}
-                    label="Each watering"
-                    value={
-                      <>
-                        ~{irrigation.estimate.perEventMm} mm every{' '}
-                        {irrigation.estimate.intervalDays}d
-                      </>
-                    }
-                  />
-                  <p className="compare">{irrigation.narrative.text}</p>
-                  <ul className="schedule-list">
-                    {irrigation.schedule.map((row) => (
-                      <li key={row.date} className={`sched-${row.action}`}>
-                        <strong>{row.date}</strong>
-                        <span>
-                          {row.action}
-                          {row.volumeMm > 0
-                            ? ` · ${row.volumeMm} mm (${row.volumeM3} m³)`
-                            : ''}
-                        </span>
-                        <em>{row.reason}</em>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="hint">{irrigation.honesty}</p>
-
-                  {irrigation.pumpWindows && (
-                    <div className="pump-windows">
-                      <div className="panel-head tight">
-                        <h3 className="panel-title-icon">
-                          <Zap size={14} strokeWidth={2} aria-hidden />
-                          Best times to pump
-                        </h3>
-                      </div>
-                      <StatRow
-                        icon={Zap}
-                        label="Good pump windows"
-                        value={
-                          <>
-                            {irrigation.pumpWindows.summary.softWindows} · ~
-                            {irrigation.pumpWindows.summary.totalKwhEstimate}{' '}
-                            kWh
-                          </>
-                        }
-                      />
-                      <StatRow
-                        icon={Gauge}
-                        label="Saved vs peak hours"
-                        value={
-                          <>
-                            ~
-                            {
-                              irrigation.pumpWindows.summary
-                                .totalKwhSavedVsPeak
-                            }{' '}
-                            kWh
-                          </>
-                        }
-                      />
-                      {irrigation.pumpWindows.summary.blockedByInspect && (
-                        <p className="status error">
-                          Pump timing paused — check the crop view first
-                          (inspect flag).
-                        </p>
-                      )}
-                      <ul className="schedule-list">
-                        {irrigation.pumpWindows.windows.map((row) => (
-                          <li
-                            key={`pw-${row.date}`}
-                            className={`sched-pump-${row.quality}`}
-                          >
-                            <strong>{row.date}</strong>
-                            <span>
-                              {row.quality === 'soft'
-                                ? `${String(row.startHour).padStart(2, '0')}:00–${String(row.endHour).padStart(2, '0')}:00 preferred`
-                                : row.quality}
-                              {row.volumeM3 > 0
-                                ? ` · ${row.volumeM3} m³ · ~${row.estimatedKwh} kWh`
-                                : ''}
-                            </span>
-                            <em>{row.reason}</em>
-                          </li>
-                        ))}
-                      </ul>
-                      <ul className="pump-assumptions">
-                        {irrigation.pumpWindows.assumptions.map((a) => (
-                          <li key={a}>{a}</li>
-                        ))}
-                      </ul>
-                      <p className="hint">
-                        {irrigation.pumpWindows.honesty}
-                      </p>
-                    </div>
-                  )}
+                  <p className="hint tight">
+                    Full schedule opens in a larger window for easy reading.
+                  </p>
+                  <button
+                    className="primary"
+                    type="button"
+                    onClick={() => setPlanOpen(true)}
+                  >
+                    <Droplets size={15} strokeWidth={2} aria-hidden />
+                    Open watering plan
+                  </button>
                 </>
               )}
             </section>
@@ -1118,6 +1075,217 @@ export default function Analysis() {
           )}
         </div>
       </div>
+
+      {planOpen && irrigation && (
+        <div className="plan-layer" role="presentation">
+          <button
+            type="button"
+            className="plan-backdrop"
+            aria-label="Close watering plan"
+            onClick={() => setPlanOpen(false)}
+          />
+          <div
+            className="plan-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Watering plan"
+          >
+            <header className="plan-modal-head">
+              <div>
+                <p className="eyebrow">
+                  <Droplets size={14} strokeWidth={2} aria-hidden />
+                  Watering plan
+                </p>
+                <h2>{site?.name || 'Your field'}</h2>
+                <p className="plan-modal-sub">
+                  Simple 7-day guide — how much water and when to turn the pump
+                  on.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="plan-close"
+                aria-label="Close"
+                onClick={() => setPlanOpen(false)}
+              >
+                <X size={18} strokeWidth={2} aria-hidden />
+              </button>
+            </header>
+
+            <div className="plan-modal-body">
+              <div className="plan-summary">
+                <div className="plan-kpi">
+                  <span>Daily crop need</span>
+                  <strong>{irrigation.estimate.etcMmPerDay} mm</strong>
+                  <em>per day</em>
+                </div>
+                <div className="plan-kpi">
+                  <span>Next 7 days</span>
+                  <strong>{irrigation.estimate.need7Mm} mm</strong>
+                  <em>~{irrigation.estimate.need7M3} m³ total</em>
+                </div>
+                <div className="plan-kpi">
+                  <span>Each watering</span>
+                  <strong>~{irrigation.estimate.perEventMm} mm</strong>
+                  <em>every {irrigation.estimate.intervalDays} day(s)</em>
+                </div>
+              </div>
+
+              {irrigation.narrative.text && (
+                <p className="plan-advice">{irrigation.narrative.text}</p>
+              )}
+
+              <section className="plan-section">
+                <h3>
+                  <CalendarDays size={16} strokeWidth={2} aria-hidden />
+                  What to do each day
+                </h3>
+                <div className="plan-table-wrap">
+                  <table className="plan-table">
+                    <thead>
+                      <tr>
+                        <th>Day</th>
+                        <th>Action</th>
+                        <th>Water</th>
+                        <th>Why</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {irrigation.schedule.map((row) => (
+                        <tr
+                          key={row.date}
+                          className={`plan-row-${row.action}`}
+                        >
+                          <td>
+                            <strong>{formatPlanDate(row.date)}</strong>
+                            <span className="plan-date-iso">{row.date}</span>
+                          </td>
+                          <td>
+                            <span
+                              className={`plan-pill plan-pill-${row.action}`}
+                            >
+                              {waterActionLabel(row.action)}
+                            </span>
+                          </td>
+                          <td>
+                            {row.volumeMm > 0
+                              ? `${row.volumeMm} mm (~${row.volumeM3} m³)`
+                              : '—'}
+                          </td>
+                          <td>{row.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              {irrigation.pumpWindows && (
+                <section className="plan-section">
+                  <h3>
+                    <Zap size={16} strokeWidth={2} aria-hidden />
+                    Best times to pump
+                  </h3>
+                  {irrigation.pumpWindows.summary.blockedByInspect && (
+                    <p className="status error">
+                      Pump timing paused — check the crop view first.
+                    </p>
+                  )}
+                  <div className="plan-summary plan-summary-tight">
+                    <div className="plan-kpi">
+                      <span>Good pump windows</span>
+                      <strong>
+                        {irrigation.pumpWindows.summary.softWindows}
+                      </strong>
+                    </div>
+                    <div className="plan-kpi">
+                      <span>Est. energy</span>
+                      <strong>
+                        ~{irrigation.pumpWindows.summary.totalKwhEstimate} kWh
+                      </strong>
+                    </div>
+                    <div className="plan-kpi">
+                      <span>Saved vs peak</span>
+                      <strong>
+                        ~
+                        {
+                          irrigation.pumpWindows.summary.totalKwhSavedVsPeak
+                        }{' '}
+                        kWh
+                      </strong>
+                    </div>
+                  </div>
+                  <div className="plan-table-wrap">
+                    <table className="plan-table">
+                      <thead>
+                        <tr>
+                          <th>Day</th>
+                          <th>Preferred hours</th>
+                          <th>Water</th>
+                          <th>Energy</th>
+                          <th>Why</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {irrigation.pumpWindows.windows.map((row) => (
+                          <tr
+                            key={`pw-${row.date}`}
+                            className={`plan-row-pump-${row.quality}`}
+                          >
+                            <td>
+                              <strong>{formatPlanDate(row.date)}</strong>
+                              <span className="plan-date-iso">{row.date}</span>
+                            </td>
+                            <td>
+                              <span
+                                className={`plan-pill plan-pill-pump-${row.quality}`}
+                              >
+                                {pumpQualityLabel(
+                                  row.quality,
+                                  row.startHour,
+                                  row.endHour,
+                                )}
+                              </span>
+                            </td>
+                            <td>
+                              {row.volumeM3 > 0
+                                ? `${row.volumeMm} mm (~${row.volumeM3} m³)`
+                                : '—'}
+                            </td>
+                            <td>
+                              {row.estimatedKwh > 0
+                                ? `~${row.estimatedKwh} kWh`
+                                : '—'}
+                            </td>
+                            <td>{row.reason}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )}
+
+              <p className="plan-honesty">{irrigation.honesty}</p>
+              {irrigation.pumpWindows?.honesty && (
+                <p className="plan-honesty">
+                  {irrigation.pumpWindows.honesty}
+                </p>
+              )}
+            </div>
+
+            <footer className="plan-modal-foot">
+              <button
+                type="button"
+                className="primary"
+                onClick={() => setPlanOpen(false)}
+              >
+                Got it
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
