@@ -309,7 +309,8 @@ html[dir='rtl'] .app-shell {
 }
 
 .app-main:has(.dash-page),
-.app-main:has(.picker-page) {
+.app-main:has(.picker-page),
+.app-main:has(.wg-page) {
   overflow: hidden;
 }
 
