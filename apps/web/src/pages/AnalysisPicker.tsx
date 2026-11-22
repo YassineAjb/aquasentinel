@@ -60,58 +60,61 @@ export default function AnalysisPicker() {
 
   return (
     <div className="picker-page">
-      <header className="picker-hero">
-        <p className="eyebrow">{t('picker.eyebrow')}</p>
-        <h1>{t('picker.title')}</h1>
-        <p className="sub">{status}</p>
-      </header>
+      <div className="dash-bg" aria-hidden />
+      <div className="picker-scroll">
+        <header className="picker-hero">
+          <p className="eyebrow">{t('picker.eyebrow')}</p>
+          <h1>{t('picker.title')}</h1>
+          <p className="sub">{status}</p>
+        </header>
 
-      {busy ? (
-        <div className="picker-loading">{t('picker.loadingFields')}</div>
-      ) : sites.length === 0 ? (
-        <div className="picker-empty">
-          <p>{t('picker.noSitesYet')}</p>
-          <Link className="primary inline" to="/sites">
-            {t('picker.goSites')}
-          </Link>
-        </div>
-      ) : (
-        <div className="site-cards">
-          {sites.map((s) => (
-            <button
-              key={s._id}
-              type="button"
-              className="site-card"
-              onClick={() => navigate(`/analysis/${s._id}`)}
-            >
-              <div className="site-card-map">
-                <SiteMiniMap boundary={s.boundary} />
-              </div>
-              <div className="site-card-body">
-                <div className="site-card-top">
-                  <strong>{s.name}</strong>
-                  <span className="site-card-cta">{t('picker.open')}</span>
+        {busy ? (
+          <div className="picker-loading">{t('picker.loadingFields')}</div>
+        ) : sites.length === 0 ? (
+          <div className="picker-empty">
+            <p>{t('picker.noSitesYet')}</p>
+            <Link className="primary inline" to="/sites">
+              {t('picker.goSites')}
+            </Link>
+          </div>
+        ) : (
+          <div className="site-cards">
+            {sites.map((s) => (
+              <button
+                key={s._id}
+                type="button"
+                className="site-card"
+                onClick={() => navigate(`/analysis/${s._id}`)}
+              >
+                <div className="site-card-map">
+                  <SiteMiniMap boundary={s.boundary} />
                 </div>
-                <div className="site-card-meta">
-                  <span>
-                    {s.scanCount
-                      ? t('dash.scan', { count: s.scanCount })
-                      : t('dash.noScans')}
-                  </span>
-                  {s.latestDate && (
+                <div className="site-card-body">
+                  <div className="site-card-top">
+                    <strong>{s.name}</strong>
+                    <span className="site-card-cta">{t('picker.open')}</span>
+                  </div>
+                  <div className="site-card-meta">
                     <span>
-                      {t('dash.latest', { date: s.latestDate })}
-                      {s.latestNdvi != null
-                        ? ` · NDVI ${s.latestNdvi.toFixed(3)}`
-                        : ''}
+                      {s.scanCount
+                        ? t('dash.scan', { count: s.scanCount })
+                        : t('dash.noScans')}
                     </span>
-                  )}
+                    {s.latestDate && (
+                      <span>
+                        {t('dash.latest', { date: s.latestDate })}
+                        {s.latestNdvi != null
+                          ? ` · NDVI ${s.latestNdvi.toFixed(3)}`
+                          : ''}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

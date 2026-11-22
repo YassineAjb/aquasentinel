@@ -109,7 +109,7 @@ function focusSiteOnMap(win: CsrxWindow, _doc: Document, site: Site): boolean {
       win.__AQUA_SITE_LAYER__ = L.polygon(latlngs, {
         color: '#ffd84d',
         weight: 2.5,
-        fillColor: '#2f9e44',
+        fillColor: '#40916c',
         fillOpacity: 0.12,
       }).addTo(map);
       const bounds = L.latLngBounds(latlngs);

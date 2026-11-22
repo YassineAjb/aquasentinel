@@ -39,7 +39,7 @@ export default function SiteMiniMap({ boundary, className }: Props) {
     const poly = L.polygon(latLngs, {
       color: '#7ed957',
       weight: 2,
-      fillColor: '#2f9e44',
+      fillColor: '#40916c',
       fillOpacity: 0.25,
     }).addTo(map);
 

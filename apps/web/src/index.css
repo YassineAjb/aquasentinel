@@ -1,31 +1,48 @@
+/*
+  SAKIYA palette — sampled from /public/hero.jpeg
+  Forest #1B4332 · Leaf #40916C · Field #52B788
+  Sakura #FF85A1 · Aqua #48CAE4 · Sun #FFFDF0 · Sky #E4EDF6
+*/
+
 :root,
 [data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0c1210;
-  --bg-glow-a: #1a3324;
-  --bg-glow-b: #14241c;
-  --bg-aside: #101714;
-  --bg-panel: rgba(18, 28, 22, 0.92);
-  --bg-panel-2: #162019;
-  --bg-input: #0d1511;
-  --bg-nav: rgba(8, 14, 11, 0.96);
-  --bg-nav-glow: rgba(28, 48, 36, 0.4);
-  --bg-hover: rgba(255, 255, 255, 0.04);
-  --bg-hover-strong: rgba(255, 255, 255, 0.06);
-  --bg-disabled: #2a3830;
-  --text-disabled: #7a8b7e;
-  --line: rgba(120, 150, 128, 0.22);
-  --text: #e7f0e8;
-  --muted: #8fa396;
-  --faint: #6d7f72;
-  --accent: #2f9e44;
-  --accent-soft: #1e6b30;
-  --accent-text: #dff5e4;
-  --warn: #ffe08a;
-  --danger: #ffb4a8;
-  --ok: #9ec5a3;
-  --map-bg: #0b100c;
-  --shadow-soft: 0 10px 40px rgba(0, 0, 0, 0.28);
+  --forest: #1b4332;
+  --leaf: #40916c;
+  --field: #52b788;
+  --sakura: #ff85a1;
+  --aqua: #48cae4;
+  --sun: #fffdf0;
+  --sky: #e4edf6;
+
+  --bg: #07140f;
+  --bg-glow-a: #1b4332;
+  --bg-glow-b: #0a2f3a;
+  --bg-aside: #0c1813;
+  --bg-panel: rgba(12, 28, 20, 0.94);
+  --bg-panel-2: #12261c;
+  --bg-input: #0a1611;
+  --bg-nav: rgba(7, 20, 15, 0.97);
+  --bg-nav-glow: rgba(64, 145, 108, 0.22);
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-hover-strong: rgba(255, 255, 255, 0.08);
+  --bg-disabled: #24362c;
+  --text-disabled: #7d9285;
+  --line: rgba(82, 183, 136, 0.22);
+  --text: #f2faf5;
+  --muted: #9fbfad;
+  --faint: #769987;
+  --accent: #52b788;
+  --accent-soft: #2d6a4f;
+  --accent-text: #e8fff1;
+  --bloom: #ff85a1;
+  --bloom-soft: rgba(255, 133, 161, 0.2);
+  --aqua-soft: rgba(72, 202, 228, 0.18);
+  --warn: #ffd27a;
+  --danger: #ffb0a6;
+  --ok: #95d5b2;
+  --map-bg: #0a1410;
+  --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.34);
   --radius: 12px;
   --font: 'Montserrat', 'Segoe UI', sans-serif;
   --display: 'Montserrat', 'Segoe UI', sans-serif;
@@ -33,31 +50,42 @@
 
 [data-theme='light'] {
   color-scheme: light;
-  --bg: #f5f8f5;
-  --bg-glow-a: #e8f1ea;
-  --bg-glow-b: #eef3ef;
-  --bg-aside: #f5f8f5;
+  --forest: #1b4332;
+  --leaf: #40916c;
+  --field: #52b788;
+  --sakura: #ff85a1;
+  --aqua: #48cae4;
+  --sun: #fffdf0;
+  --sky: #e4edf6;
+
+  --bg: #fffdf0;
+  --bg-glow-a: #eaf6ef;
+  --bg-glow-b: #e4edf6;
+  --bg-aside: #fffaf2;
   --bg-panel: #ffffff;
-  --bg-panel-2: #eef3ef;
+  --bg-panel-2: #f3f7f3;
   --bg-input: #ffffff;
-  --bg-nav: #f5f8f5;
-  --bg-nav-glow: rgba(200, 220, 205, 0.45);
-  --bg-hover: rgba(20, 40, 28, 0.05);
-  --bg-hover-strong: rgba(20, 40, 28, 0.08);
-  --bg-disabled: #d5ddd6;
-  --text-disabled: #7a8b7e;
-  --line: rgba(40, 70, 50, 0.12);
-  --text: #1a1a1a;
-  --muted: #4d6356;
-  --faint: #6a7d70;
-  --accent: #248a38;
-  --accent-soft: #1a6b2c;
-  --accent-text: #0f3d1c;
-  --warn: #8a6200;
+  --bg-nav: #fffaf2;
+  --bg-nav-glow: rgba(64, 145, 108, 0.14);
+  --bg-hover: rgba(27, 67, 50, 0.05);
+  --bg-hover-strong: rgba(27, 67, 50, 0.08);
+  --bg-disabled: #d9e0d8;
+  --text-disabled: #7d9285;
+  --line: rgba(27, 67, 50, 0.14);
+  --text: #1b4332;
+  --muted: #3d5a4c;
+  --faint: #6a8576;
+  --accent: #40916c;
+  --accent-soft: #1b4332;
+  --accent-text: #1b4332;
+  --bloom: #ff85a1;
+  --bloom-soft: rgba(255, 133, 161, 0.16);
+  --aqua-soft: rgba(72, 202, 228, 0.14);
+  --warn: #9a6200;
   --danger: #b42318;
-  --ok: #1f6b38;
-  --map-bg: #e4ebe5;
-  --shadow-soft: 0 10px 36px rgba(20, 40, 28, 0.08);
+  --ok: #40916c;
+  --map-bg: #e5eee8;
+  --shadow-soft: 0 12px 36px rgba(27, 67, 50, 0.1);
 }
 
 * {
@@ -75,8 +103,8 @@ body,
 body {
   font-family: var(--font);
   background:
-    radial-gradient(1200px 600px at 10% -10%, var(--bg-glow-a) 0%, transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, var(--bg-glow-b) 0%, transparent 45%),
+    radial-gradient(1200px 600px at 8% -12%, var(--bg-glow-a) 0%, transparent 55%),
+    radial-gradient(900px 520px at 100% 0%, var(--bg-glow-b) 0%, transparent 48%),
     var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -84,7 +112,11 @@ body {
 }
 
 [data-theme='light'] body {
-  background: var(--bg);
+  background:
+    radial-gradient(1100px 520px at 10% -10%, rgba(64, 145, 108, 0.18) 0%, transparent 55%),
+    radial-gradient(900px 480px at 95% 0%, rgba(72, 202, 228, 0.16) 0%, transparent 50%),
+    radial-gradient(720px 400px at 50% 105%, rgba(255, 133, 161, 0.12) 0%, transparent 55%),
+    var(--sun);
 }
 
 button {
@@ -117,9 +149,9 @@ select {
 
 input:focus,
 select:focus {
-  outline: 2px solid rgba(47, 158, 68, 0.35);
+  outline: 2px solid color-mix(in srgb, var(--aqua) 48%, transparent);
   outline-offset: 1px;
-  border-color: rgba(47, 158, 68, 0.55);
+  border-color: color-mix(in srgb, var(--leaf) 55%, transparent);
 }
 
 .leaflet-container {

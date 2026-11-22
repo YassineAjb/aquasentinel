@@ -92,15 +92,15 @@ export default function Landing() {
           <p className="sub">{t('landing.aboutSub')}</p>
         </header>
         <div className="landing-pillars">
-          <div>
+          <div className="landing-pillar landing-pillar-water">
             <strong>{t('landing.pillarWater')}</strong>
             <span>{t('landing.pillarWaterText')}</span>
           </div>
-          <div>
+          <div className="landing-pillar landing-pillar-energy">
             <strong>{t('landing.pillarEnergy')}</strong>
             <span>{t('landing.pillarEnergyText')}</span>
           </div>
-          <div>
+          <div className="landing-pillar landing-pillar-agri">
             <strong>{t('landing.pillarFood')}</strong>
             <span>{t('landing.pillarFoodText')}</span>
           </div>

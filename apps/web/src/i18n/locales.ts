@@ -29,7 +29,7 @@ const en: Dict = {
   'nav.theme': 'Theme',
   'nav.themeLight': 'Light',
   'nav.themeDark': 'Dark',
-  'brand.tag': 'Water · energy · food',
+  'brand.tag': 'Water · energy · agriculture',
 
 
   'landing.headline': 'Intelligent agriculture for a sustainable future.',
@@ -40,14 +40,14 @@ const en: Dict = {
   'landing.runAnalysis': 'Run analysis',
 
   'landing.aboutEyebrow': 'The platform',
-  'landing.aboutTitle': 'Field intelligence for water, energy, and food',
+  'landing.aboutTitle': 'Field intelligence for water, energy, and agriculture',
   'landing.aboutSub':
     'SAKIYA turns satellite evidence, weather context, and farmer crop profile into clear decision support — not black-box claims.',
   'landing.pillarWater': 'Water',
   'landing.pillarWaterText': 'Irrigate where vegetation shows stress; skip pulses when rain already covers the need.',
   'landing.pillarEnergy': 'Energy',
   'landing.pillarEnergyText': 'Pump Window suggests soft grid hours so pumps waste fewer kWh on weak networks.',
-  'landing.pillarFood': 'Food',
+  'landing.pillarFood': 'Agriculture',
   'landing.pillarFoodText': 'Track NDVI over time so olives, wheat, and other crops get attention before yield slips.',
 
   'landing.featuresEyebrow': 'Inside SAKIYA',
@@ -267,7 +267,7 @@ const ar: Dict = {
   'nav.theme': 'المظهر',
   'nav.themeLight': 'فاتح',
   'nav.themeDark': 'داكن',
-  'brand.tag': 'ماء · طاقة · غذاء',
+  'brand.tag': 'ماء · طاقة · زراعة',
 
 
   'landing.headline': 'زراعة ذكية من أجل مستقبل مستدام.',
@@ -278,14 +278,14 @@ const ar: Dict = {
   'landing.runAnalysis': 'شغّل التحليل',
 
   'landing.aboutEyebrow': 'المنصة',
-  'landing.aboutTitle': 'ذكاء حقلي للماء والطاقة والغذاء',
+  'landing.aboutTitle': 'ذكاء حقلي للماء والطاقة والزراعة',
   'landing.aboutSub':
     'تحوّل ساقية أدلة الأقمار الصناعية والطقس وملف المحصول إلى دعم قرار واضح — لا ادعاءات صندوق أسود.',
   'landing.pillarWater': 'الماء',
   'landing.pillarWaterText': 'اروِ حيث يظهر الإجهاد النباتي؛ وتجاوز الريات عندما تغطي الأمطار الحاجة.',
   'landing.pillarEnergy': 'الطاقة',
   'landing.pillarEnergyText': 'يقترح Pump Window ساعات شبكة أنعم لتقليل هدر الكيلوواط على الشبكات الضعيفة.',
-  'landing.pillarFood': 'الغذاء',
+  'landing.pillarFood': 'الزراعة',
   'landing.pillarFoodText': 'تتبّع NDVI عبر الزمن حتى ينال الزيتون والقمح وغيرها انتباهاً قبل تراجع المحصول.',
 
   'landing.featuresEyebrow': 'داخل ساقية',
@@ -505,7 +505,7 @@ const ja: Dict = {
   'nav.theme': 'テーマ',
   'nav.themeLight': 'ライト',
   'nav.themeDark': 'ダーク',
-  'brand.tag': '水 · エネルギー · 食料',
+  'brand.tag': '水 · エネルギー · 農業',
 
 
   'landing.headline': '持続可能な未来のための知的農業。',
@@ -516,14 +516,14 @@ const ja: Dict = {
   'landing.runAnalysis': '分析を実行',
 
   'landing.aboutEyebrow': 'プラットフォーム',
-  'landing.aboutTitle': '水・エネルギー・食料のための圃場インテリジェンス',
+  'landing.aboutTitle': '水・エネルギー・農業のための圃場インテリジェンス',
   'landing.aboutSub':
     'SAKIYA は衛星根拠・気象コンテキスト・作物プロファイルを、ブラックボックスではない明確な意思決定支援に変えます。',
   'landing.pillarWater': '水',
   'landing.pillarWaterText': '植生ストレスが見える場所だけ灌漑し、雨が必要量を賄う日はスキップ。',
   'landing.pillarEnergy': 'エネルギー',
   'landing.pillarEnergyText': 'Pump Window が軟らかい電力時間帯を提案し、弱い系統での kWh 浪費を減らします。',
-  'landing.pillarFood': '食料',
+  'landing.pillarFood': '農業',
   'landing.pillarFoodText': 'NDVI を時系列で追い、オリーブや小麦などの収量低下前に対応します。',
 
   'landing.featuresEyebrow': 'SAKIYA の中身',

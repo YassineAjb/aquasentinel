@@ -74,7 +74,6 @@ export default function AppShell() {
             {!collapsed && (
               <span className="brand-copy">
                 <span className="brand-mark">SAKIYA</span>
-                <span className="brand-tag">{t('brand.tag')}</span>
               </span>
             )}
           </button>

@@ -127,28 +127,28 @@ export default function Dashboard() {
             <p>{t('dash.nextSub')}</p>
           </div>
           <div className="dash-next-grid">
-            <Link className="dash-next-card" to="/sites">
+            <Link className="dash-next-card dash-next-leaf" to="/sites">
               <span className="dash-next-icon">
                 <MapPinned size={22} strokeWidth={2} aria-hidden />
               </span>
               <strong>{t('dash.action.sites')}</strong>
               <span>{t('dash.action.sitesHint')}</span>
             </Link>
-            <Link className="dash-next-card" to="/analysis">
+            <Link className="dash-next-card dash-next-field" to="/analysis">
               <span className="dash-next-icon">
                 <ChartSpline size={22} strokeWidth={2} aria-hidden />
               </span>
               <strong>{t('dash.action.analysis')}</strong>
               <span>{t('dash.action.analysisHint')}</span>
             </Link>
-            <Link className="dash-next-card" to="/waterguard">
+            <Link className="dash-next-card dash-next-aqua" to="/waterguard">
               <span className="dash-next-icon">
                 <ShieldAlert size={22} strokeWidth={2} aria-hidden />
               </span>
               <strong>{t('dash.action.water')}</strong>
               <span>{t('dash.action.waterHint')}</span>
             </Link>
-            <Link className="dash-next-card" to="/cutsheetrx">
+            <Link className="dash-next-card dash-next-sakura" to="/cutsheetrx">
               <span className="dash-next-icon">
                 <Mountain size={22} strokeWidth={2} aria-hidden />
               </span>

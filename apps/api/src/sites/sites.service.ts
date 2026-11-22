@@ -671,14 +671,14 @@ export class SitesService {
     position: sticky; top: 0; z-index: 20;
     display: flex; gap: .6rem; align-items: center; flex-wrap: wrap;
     margin: -2rem -2rem 1.25rem; padding: .85rem 1.1rem;
-    background: #102018; color: #e7f0e8;
+    background: #1b4332; color: #e7f0e8;
     border-bottom: 1px solid rgba(120,150,128,.35);
   }
   .print-bar button, .print-bar .hint {
     font: inherit;
   }
   .print-bar button {
-    background: #2f9e44; color: #fff; border: 0; border-radius: 8px;
+    background: #40916c; color: #fff; border: 0; border-radius: 8px;
     padding: .55rem .9rem; font-weight: 650; cursor: pointer;
   }
   .print-bar .hint { color: #9eb3a3; font-size: .85rem; }
@@ -759,16 +759,16 @@ ${
   <title>SAKIYA report — ${esc(site.name)}</title>
   <style>
     :root {
-      --bg: #f4f7f4;
+      --bg: #fffdf0;
       --card: #fff;
-      --text: #14241a;
+      --text: #1b4332;
       --muted: #4a6354;
       --line: rgba(40,70,50,.14);
-      --accent: #2f9e44;
-      --accent-soft: #e7f6ea;
+      --accent: #40916c;
+      --accent-soft: #eaf6ef;
       --warn: #9a5b00;
       --bad: #a13d1a;
-      --good: #176b2c;
+      --good: #1b4332;
       --shadow: 0 14px 36px rgba(20,40,28,.1);
     }
     * { box-sizing: border-box; }
@@ -777,7 +777,7 @@ ${
       font-family: "Segoe UI", system-ui, sans-serif;
       color: var(--text);
       background:
-        radial-gradient(900px 420px at 10% -10%, rgba(47,158,68,.12), transparent 55%),
+        radial-gradient(900px 420px at 10% -10%, rgba(64,145,108,.14), transparent 55%),
         var(--bg);
       line-height: 1.45;
     }
@@ -786,7 +786,7 @@ ${
       position: sticky; top: 0; z-index: 20;
       display: flex; gap: .65rem; align-items: center; flex-wrap: wrap;
       margin: 0 0 1.25rem; padding: .85rem 1rem;
-      background: #102018; color: #e7f0e8;
+      background: #1b4332; color: #e7f0e8;
       border-radius: 12px;
     }
     .print-bar button {
@@ -839,14 +839,14 @@ ${
     .hero-side p { margin: 0; color: var(--muted); font-size: .9rem; }
     .ai-card {
       margin-bottom: 1.1rem; padding: 1.15rem 1.25rem;
-      border-color: rgba(47,158,68,.28);
+      border-color: rgba(64,145,108,.28);
       background: linear-gradient(160deg, #f3fbf5, #fff 55%);
     }
     .ai-card h2 { margin: 0 0 .45rem; font-size: 1.15rem; }
     .ai-card .lead { margin: 0; font-size: 1.02rem; color: var(--text); }
     .ai-meta {
       margin: .75rem 0 0; padding: .55rem .7rem; border-radius: 10px;
-      background: rgba(47,158,68,.08); color: var(--muted); font-size: .8rem;
+      background: rgba(64,145,108,.08); color: var(--muted); font-size: .8rem;
     }
     .evidence { margin: .85rem 0 0; padding: 0; list-style: none; display: grid; gap: .4rem; }
     .evidence li {
@@ -868,12 +868,12 @@ ${
     .chart-axis { fill: #7a8b80; font-size: 10px; }
     .chart-track { fill: #e7eee8; }
     .chart-fill-a { fill: #7dbe8a; }
-    .chart-fill-b { fill: #2f9e44; }
+    .chart-fill-b { fill: #40916c; }
     .chart-fill-cloud { fill: #6b8cae; }
     .gauge-neg { fill: rgba(161,61,26,.18); }
-    .gauge-pos { fill: rgba(47,158,68,.18); }
+    .gauge-pos { fill: rgba(64,145,108,.18); }
     .gauge-zero { stroke: #8aa090; stroke-width: 1.5; }
-    .gauge-knob { fill: #2f9e44; stroke: #fff; stroke-width: 2; }
+    .gauge-knob { fill: #40916c; stroke: #fff; stroke-width: 2; }
     .gauge-knob.gauge-bad { fill: var(--bad); }
     .gauge-knob.gauge-warn { fill: #d08900; }
     .gauge-knob.gauge-neutral { fill: #7a8b80; }
@@ -891,7 +891,7 @@ ${
     .range-track { height: 10px; border-radius: 999px; background: #e7eee8; overflow: hidden; }
     .range-fill { height: 100%; border-radius: 999px; }
     .range-fill.r-min { background: #c4a35a; }
-    .range-fill.r-mean { background: #2f9e44; }
+    .range-fill.r-mean { background: #40916c; }
     .range-fill.r-max { background: #1f6b35; }
     .range-row strong { text-align: right; font-variant-numeric: tabular-nums; }
     .scenes { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
