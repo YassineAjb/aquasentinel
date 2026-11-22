@@ -1,5 +1,8 @@
-# AquaSentinel (Kizuna 2026)
+# SAKIYA
 
+Intelligent agriculture for water, energy, and crops.
+
+SAKIYA helps farmers map fields, scan crop health from satellite imagery, compare dates, plan irrigation, detect water loss, and read terrain with LiDAR — with an accessible first-run experience for real farm use.
 ```text
 React (Vite) + Leaflet
         ↓
